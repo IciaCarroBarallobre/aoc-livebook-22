@@ -51,7 +51,7 @@ Hey! I will solve the advent of code (AOC) using Elixir 💧 &amp; Livebook 📚
 * Step 4: Download the project with GitHub Desktop, by https or by ssh. For example with https:
 
 ```shell
-git clone https://github.com/IciaCarroBarallobre/Elixir-Advent-of-Code.git
+git clone https://github.com/IciaCarroBarallobre/aoc-livebook-22.git
 ```
 
 * Step 6: Initialize Livebook and search the file: AdventOfCodeIndex.livemd
