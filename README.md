@@ -4,7 +4,7 @@ Hey! I will solve the advent of code (AOC) using Elixir 💧 &amp; Livebook 📚
 
 📖 In this livebook are indexed all puzzles completed and their answers: [AOC Index Livebook](./AdventOfCodeIndex.livemd).
 
-[![Run in Livebook](https://livebook.dev/badge/v1/pink.svg)](https://livebook.dev/run?url=https://github.com/IciaCarroBarallobre/aoc-livebook-22/blob/main/AdventOfCode.livemd)
+[![Run in Livebook](https://livebook.dev/badge/v1/pink.svg)](https://livebook.dev/run?url=https://github.com/IciaCarroBarallobre/aoc-livebook-22/blob/main/AdventOfCodeIndex.livemd)
 
 🚢 Be careful about the port! Maybe, it's in use.
 
