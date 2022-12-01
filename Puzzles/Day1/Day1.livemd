@@ -1,0 +1,63 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# AOC 22 - Day1
+
+## Index
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
+
+**Index**
+
+* [Puzzle 1](#calorie-counting-(puzzle-1/2))
+* [Puzzle 2](#calorie-counting-(puzzle-2/2))
+
+```elixir
+puzzle_input_path = "<insert puzzle input path>"
+```
+
+## Calorie Counting (Puzzle 1/2)
+
+The **🌴jungle🌴 must be too overgrown** and difficult to navigate in vehicles or air-access; the 🧝**Elves' expedition traditionally goes on foot**🦶.
+
+The Elves begin taking **inventory** of their supplies, one important consideration is food🍕. In particular, **the number of Calories each Elf is carrying** 🔍🎒: your puzzle input.
+
+The Elves take turns **writing down the number of Calories** 📜 contained by the various meals (🥙), snacks (🍘), rations (🍱), etc., **one item per line**. Each Elf **separates** their **own inventory** from **the previous** Elf's inventory (if any) **by a blank line**.
+
+Example:
+
+```
+1000
+2000
+3000
+
+4000
+
+5000
+6000
+
+7000
+8000
+9000
+
+10000
+```
+
+This **list represents the Calories of the food carried** by **5 Elves**:
+
+* 🧝 The **first** Elf is carrying food with `1000`, `2000`, and `3000` Calories => Total of `6000`.
+* 🧝 The **second** Elf is carrying one food item with `4000` Calories => Total of `4000`.
+* 🧝 The **third** Elf is carrying food with `5000` and `6000` Calories => Total of `11000`.
+* 🧝 The **fourth** Elf is carrying food with `7000`, `8000`, and `9000` Calories => Total of `24000`.
+* 🧝 The **fifth** Elf is carrying one food item with `10000` Calories => Total of `10000`.
+
+In case the Elves get hungry 😋 and need extra snacks, they need to know **how many Calories are being carried by the Elf carrying the most Calories**. In the example above, this is `24000` (carried by the fourth Elf).
+
+**How many total Calories is carrying the Elf carrying the most Calories?**
+
+## Calorie Counting (Puzzle 2/2)
+
+| Previous | Next                         |
+| -------- | ---------------------------: |
+| -        | [Day 2](../Day2/Day2.livemd) |
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
