@@ -1,0 +1,45 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# Advent Of Code 2022 - Index 🎄🤶🏽
+
+## Introduction
+
+❄️ **Santa's reindeer** 🦌 typically eat regular reindeer food, but they **need a lot of magical energy to deliver presents on Christmas**. For that, their favorite snack is a **special type of star** fruit ⭐ that only grows deep in the jungle🌳. The Elves have brought you on their annual expedition to the grove where the fruit grows.
+
+**To supply enough magical energy**, the expedition needs to **retrieve a minimum of fifty stars by December 25th** 📅. Although the Elves assure you that the grove has plenty of fruit, you decide to grab any fruit you see along the way, just in case.
+
+```shell
+    *       *         *   .     .      *       *           
+  .  *  /\       /\   *      .  *  /\       /\       *    
+       /  \   * /  \  *       .   /  \   * /  \  *          . 
+  *    /  \     /  \   .   *      /  \     /  \   .   *        .
+      /    \   /    \            /    \   /    \          *
+   *   `||` ..  `||`   . *.   *   `||` ..  `||`   . *.    * jb .
+
+               ""\/  \/""
+                 "\__/"
+                  (oo)
+         -. ______-LJ
+          ,'        |
+          |.____..  /
+          \\      \\
+          ||      //         vir.
+```
+
+([Christmas ASCII Draw](https://ascii.co.uk/) & [Asciiart Website](https://asciiart.website/index.php?art=animals/deer))
+
+⭐ **Collect stars by solving puzzles** ⭐
+
+Two puzzles will be made available on each day in the Advent calendar; the second puzzle is unlocked when you complete the first. Each puzzle grants one star. **Good luck!**
+
+## Days Index
+
+### Week 1
+
+* [⭐ Day 1 ⭐](./Puzzles/Day1/Day1.livemd)
+
+  ...
+
+<!-- livebook:{"break_markdown":true} -->
+
+

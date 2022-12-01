@@ -1,0 +1,178 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# AOC 22 - Day1
+
+## Index
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
+
+**Index**
+
+* [Puzzle 1](#calorie-counting-(puzzle-1/2))
+* [Puzzle 2](#calorie-counting-(puzzle-2/2))
+
+## Calorie Counting (Puzzle 1/2)
+
+The **🌴jungle🌴 must be too overgrown** and difficult to navigate in vehicles or air-access; the 🧝**Elves' expedition traditionally goes on foot**🦶.
+
+The Elves begin taking **inventory** of their supplies, one important consideration is food🍕. In particular, **the number of Calories each Elf is carrying** 🔍🎒: your puzzle input.
+
+The Elves take turns **writing down the number of Calories** 📜 contained by the various meals (🥙), snacks (🍘), rations (🍱), etc., **one item per line**. Each Elf **separates** their **own inventory** from **the previous** Elf's inventory (if any) **by a blank line**.
+
+Example:
+
+```
+1000
+2000
+3000
+
+4000
+
+5000
+6000
+
+7000
+8000
+9000
+
+10000
+```
+
+This **list represents the Calories of the food carried** by **5 Elves**:
+
+* 🧝 The **first** Elf is carrying food with `1000`, `2000`, and `3000` Calories => Total of `6000`.
+* 🧝 The **second** Elf is carrying one food item with `4000` Calories => Total of `4000`.
+* 🧝 The **third** Elf is carrying food with `5000` and `6000` Calories => Total of `11000`.
+* 🧝 The **fourth** Elf is carrying food with `7000`, `8000`, and `9000` Calories => Total of `24000`.
+* 🧝 The **fifth** Elf is carrying one food item with `10000` Calories => Total of `10000`.
+
+In case the Elves get hungry 😋 and need extra snacks, they need to know **how many Calories are being carried by the Elf carrying the most Calories**. In the example above, this is `24000` (carried by the fourth Elf).
+
+**How many total Calories is carrying the Elf carrying the most Calories?**
+
+```elixir
+test_input = [1000, 0, 2000, 3000, 0, 4000, 0, 5000, 6000, 0, 7000, 8000, 9000, 0, 10000]
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[1000, 0, 2000, 3000, 0, 4000, 0, 5000, 6000, 0, 7000, 8000, 9000, 0, 10000]
+```
+
+```elixir
+## Read the file
+
+# Livebook & Input file are in same directory
+input_root = "#{__DIR__}/input.txt"
+
+input =
+  case File.read(input_root) do
+    {:ok, input} ->
+      input
+      |> String.replace("\n\n", "\n0\n")
+      |> String.split("\n", trim: true)
+      |> Enum.map(&String.to_integer/1)
+
+    {:error, msg} ->
+      IO.inspect(msg)
+  end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[3120, 4127, 1830, 1283, 5021, 3569, 3164, 2396, 4367, 2821, 6118, 4450, 1300, 3648, 1933, 0, 4841,
+ 6135, 5806, 8128, 4069, 6511, 3601, 4786, 0, 2739, 2663, 2678, 1627, 7779, 7845, 9191, 9656, 0,
+ 1372, 11432, 14854, 15168, 3789, 0, 47972, 0, 5109, 4118, 3399, 6468, 6900, 4742, 4196, 6590, ...]
+```
+
+### Solving the exercise
+
+```elixir
+groups =
+  input
+  # Grouping elements in lists splitting by 0
+  |> Enum.chunk_by(&(&1 == 0))
+  |> Enum.filter(&(&1 != [0]))
+  # Sum elements of each group
+  |> Enum.map(&Enum.sum/1)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[49147, 43877, 44178, 46615, 47972, 64985, 50841, 50806, 39095, 55497, 51972, 54885, 49855, 51341,
+ 48308, 50027, 47586, 47417, 66229, 52899, 55687, 39205, 39372, 50965, 58766, 55215, 9562, 38532,
+ 49429, 51534, 58018, 12651, 43650, 55626, 37288, 39223, 51939, 45049, 47245, 20525, 38888, 39824,
+ 39984, 45997, 42796, 50701, 44373, 54716, 28809, 49684, ...]
+```
+
+```elixir
+max_value =
+  groups
+  |> Enum.max()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+68292
+```
+
+## Calorie Counting (Puzzle 2/2)
+
+🕦  By the time you calculate the answer to the Elves' question, they've already realized that the Elf carrying the most Calories of food might eventually run out of snacks.
+
+To avoid this unacceptable situation, the Elves would instead like to know the total Calories carried by the top three Elves carrying the most Calories (🥇🥈🥉). That way, even if one of those Elves runs out of snacks, they still have two backups.
+
+In the example above, the top three Elves are:
+
+* The **fourth** Elf (with `24000` Calories)
+* The **third** Elf (with `11000` Calories)
+* The **fifth** Elf (with `10000` Calories)
+
+The sum of the Calories carried by these three elves is `45000`.
+
+**Find the top three Elves carrying the most Calories. How many Calories are those Elves carrying in total?**
+
+```elixir
+groups
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[49147, 43877, 44178, 46615, 47972, 64985, 50841, 50806, 39095, 55497, 51972, 54885, 49855, 51341,
+ 48308, 50027, 47586, 47417, 66229, 52899, 55687, 39205, 39372, 50965, 58766, 55215, 9562, 38532,
+ 49429, 51534, 58018, 12651, 43650, 55626, 37288, 39223, 51939, 45049, 47245, 20525, 38888, 39824,
+ 39984, 45997, 42796, 50701, 44373, 54716, 28809, 49684, ...]
+```
+
+```elixir
+top = %{1 => 0, 2 => 0, 3 => 0}
+
+groups
+|> Enum.reduce(top, fn value, %{1 => top1, 2 => top2, 3 => top3} ->
+  cond do
+    value > top1 -> %{1 => value, 2 => top1, 3 => top2}
+    value > top2 -> %{1 => top1, 2 => value, 3 => top2}
+    value > top3 -> %{1 => top1, 2 => top2, 3 => value}
+    true -> %{1 => top1, 2 => top2, 3 => top3}
+  end
+end)
+|> Map.values()
+|> Enum.sum()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+203203
+```
+
+| Previous | Next                         |
+| -------- | ---------------------------: |
+| -        | [Day 2](../Day2/Day2.livemd) |
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
