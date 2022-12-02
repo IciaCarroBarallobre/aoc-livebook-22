@@ -1,0 +1,320 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# AOC 22 - Day2
+
+## Index
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
+
+**Index**
+
+* [Puzzle 1](#rock-paper-scissors-(puzzle-1/2))
+* [Puzzle 2](#rock-paper-scissors-(puzzle-2/2))
+
+## Rock Paper Scissors (Puzzle 1/2)
+
+The Elves 🧝 begin to **set up camp on the beach** 🏕️. To decide **whose tent gets to be closest to the snack storage**, a giant **Rock Paper Scissors** 📜✂️🪨 tournament is already in progress.
+
+**Rock Paper Scissors** is a game between two players. Each game contains many rounds; in each round, **the players each simultaneously choose one of Rock, Paper, or Scissors** using a hand shape. Then, a winner for that round is selected:
+
+* **Rock defeats Scissors**: 🪨 => ✂️
+* **Scissors defeats Paper**: ✂️ => 📜
+* **Paper defeats Rock**: 📜 => 🪨
+* If both players **choose the same shape**, the round instead ends in **a draw**.
+
+Appreciative of your help yesterday, one Elf **gives you an encrypted strategy guide** - your puzzle input- that they say will be sure **to help you win**🥇.
+
+* "**The first column** is what **your opponent is going to play**: 
+  * **A** for Rock 🪨
+  * **B** for Paper 📜
+  * **C** for Scissors ✂️
+
+The second column..." Suddenly, the Elf is called away to help with someone's tent. 🏕️🏃
+
+* The **second column**, you reason, must be **what you should play in response**: 
+  * **X** for Rock 🪨
+  * **Y** for Paper 📜
+  * **Z** for Scissors ✂️ 
+    Winning every time would be suspicious, so the responses must have been carefully chosen.
+
+Your **total score** is the **sum** of your **scores for each round**.  
+The **score for a single round is**:
+
+`Selected_shape + score`
+
+* **Selected_shape**: `1` for Rock🪨, `2` for Paper📜, and `3` for Scissors✂️.
+* **Score**: `0` if you lost, `3` if the round was a draw, and `6` if you won.
+
+Since you can't be sure if the Elf 🧝 is trying to help you or **trick you**😡, **you should calculate 📲 the score you would get** if you were to follow the strategy guide.
+
+Example:
+
+```
+A Y
+B X
+C Z
+```
+
+This strategy guide predicts and recommends the following:
+
+* Round 1, your opponent will choose Rock (A), and you should choose Paper (Y). It's a win for you with a score of `8` (`2` Paper + 6 `won`).
+* Round 2, your opponent will choose Paper (B), and you should choose Rock (X).  
+   It's a loss for you with a score of `1` (`1` + `0`).
+* Round 3, it's a draw choosing Scissors, giving you a score of `3 + 3 = 6`.
+
+In this example, if you were to follow the strategy guide, you would get a total score of `15 (8 + 1 + 6)`.
+
+**What would your total score be if everything goes exactly according to your strategy guide?**
+
+```elixir
+test_input = [["A", "Y"], ["B", "X"], ["C", "Z"]]
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[["A", "Y"], ["B", "X"], ["C", "Z"]]
+```
+
+```elixir
+## Read the file
+
+# Livebook & Input file are in same directory
+input_root = "#{__DIR__}/input.txt"
+
+input =
+  case File.read(input_root) do
+    {:ok, input} ->
+      input
+      |> String.split("\n", trim: true)
+      |> then(fn list -> for e <- list, do: String.split(e, " ") end)
+
+    {:error, msg} ->
+      IO.inspect(msg)
+  end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[
+  ["C", "X"],
+  ["C", "Y"],
+  ["C", "X"],
+  ["B", "X"],
+  ["B", "Z"],
+  ["A", "Z"],
+  ["C", "Y"],
+  ["C", "Z"],
+  ["B", "Z"],
+  ["C", "X"],
+  ["B", "Y"],
+  ["C", "Y"],
+  ["C", "Y"],
+  ["A", "Y"],
+  ["C", "Y"],
+  ["C", "Y"],
+  ["C", "Z"],
+  ["C", "X"],
+  ["B", "Z"],
+  ["C", "Y"],
+  ["A", "Y"],
+  ["A", "Y"],
+  ["C", "Z"],
+  ["B", "Y"],
+  ["A", "Y"],
+  ["C", "Z"],
+  ["C", "Y"],
+  ["A", "Y"],
+  ["A", "Y"],
+  ["B", "Y"],
+  ["C", "Y"],
+  ["C", "Z"],
+  ["C", "Y"],
+  ["B", "X"],
+  ["B", "Z"],
+  ["C", "Y"],
+  ["B", "Z"],
+  ["A", "X"],
+  ["C", "Z"],
+  ["A", "Y"],
+  ["B", "Y"],
+  ["C", "Y"],
+  ["C", "Y"],
+  ["B", "Z"],
+  ["B", "Y"],
+  ["A", "Z"],
+  ["C", "X"],
+  ["C", "X"],
+  ["C", ...],
+  [...],
+  ...
+]
+```
+
+### Solving the exercise
+
+```elixir
+defmodule RockPaperSccisorsV1 do
+  def calculate_score(same, same) do
+    3
+  end
+
+  def calculate_score(v1, v2) when {v1, v2} in [{1, 3}, {2, 1}, {3, 2}] do
+    6
+  end
+
+  def calculate_score(_v1, _v2) do
+    0
+  end
+
+  def calculate_shape(value) do
+    case value do
+      rock when rock in ["X", "A"] -> 1
+      paper when paper in ["Y", "B"] -> 2
+      scissors when scissors in ["Z", "C"] -> 3
+    end
+  end
+
+  def result(input) do
+    input
+    |> Enum.map(fn [elf_choice, your_choice] ->
+      user_choice_shape = calculate_shape(your_choice)
+      elf_choice_shape = calculate_shape(elf_choice)
+      calculate_score(user_choice_shape, elf_choice_shape) + user_choice_shape
+    end)
+    |> Enum.sum()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, RockPaperSccisorsV1, <<70, 79, 82, 49, 0, 0, 11, ...>>, {:result, 1}}
+```
+
+```elixir
+test_input
+|> IO.inspect()
+|> RockPaperSccisorsV1.result()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[["A", "Y"], ["B", "X"], ["C", "Z"]]
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+15
+```
+
+## Rock Paper Scissors (Puzzle 2/2)
+
+The Elf finishes helping with the tent 🏕️ and sneaks back over to you.
+
+"Anyway, **the second column says how the round needs to end**:
+
+* **X**: lose 😔
+* **Y**: draw 😐
+* **Z**: win 😊
+
+Good luck!"
+
+The total score is still calculated in the same way, but now you need to **figure out what shape to choose so the round ends as indicated**.
+
+Example:
+
+```
+A Y
+B X
+C Z
+```
+
+* Round 1: your opponent will choose Rock (`A`), and you need a draw (`Y`), so you also choose `Rock`. This gives you a score of `1 + 3 = 4`.
+* Round 2: your opponent will choose Paper (`B`), and you choose Rock so you lose (`X`) with a score of `1 + 0 = 1`.
+* Round 3: you will defeat your opponent's `Scissors` with `Rock` for a score of `1 + 6 = 7`.
+
+Now that you're correctly decrypting the ultra top secret strategy guide, you would get a `total_score=12`.
+
+**Following the Elf's instructions for the second column, what would your total score be if everything goes exactly according to your strategy guide?**
+
+```elixir
+defmodule RockPaperSccisorsV2 do
+  # Loose, Draw, Win
+  @score %{"X" => 0, "Y" => 3, "Z" => 6}
+  # Rock, Paper, Scissors
+  @shapes %{"A" => 1, "B" => 2, "C" => 3}
+
+  def calculate_score(value) do
+    @score[value]
+  end
+
+  def calculate_shape(value) do
+    @shapes[value]
+  end
+
+  # Win => (elf_choice == 1 && 2) || (elf_choice == 2 && 3) || (elf_choice == 3 && 1)
+  # It's modular: 1 wins 2, 2 wins 3, 3 wins 1 => We can use rem.
+  def calculate_win_shape(shape) do
+    rem(shape, Enum.count(@shapes)) + 1
+  end
+
+  def calculate_choice_shape(3, elf_choice_shape) do
+    elf_choice_shape
+  end
+
+  def calculate_choice_shape(6, elf_choice_shape) do
+    calculate_win_shape(elf_choice_shape)
+  end
+
+  def calculate_choice_shape(0, elf_choice_shape) do
+    [response] = [1, 2, 3] -- [elf_choice_shape, calculate_win_shape(elf_choice_shape)]
+    response
+  end
+
+  def result(input) do
+    input
+    |> Enum.map(fn [elf_choice, expected_result] ->
+      score = calculate_score(expected_result)
+      elf_shape = calculate_shape(elf_choice)
+      shape = calculate_choice_shape(score, elf_shape)
+      shape + score
+    end)
+    |> Enum.sum()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, RockPaperSccisorsV2, <<70, 79, 82, 49, 0, 0, 12, ...>>, {:result, 1}}
+```
+
+```elixir
+test_input
+|> IO.inspect()
+|> RockPaperSccisorsV2.result()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[["A", "Y"], ["B", "X"], ["C", "Z"]]
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+12
+```
+
+| Previous                     | Next                         |
+| ---------------------------- | ---------------------------: |
+| [Day 1](../Day1/Day1.livemd) | [Day 3](../Day3/Day3.livemd) |
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
