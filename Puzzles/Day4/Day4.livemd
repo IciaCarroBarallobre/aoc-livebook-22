@@ -1,0 +1,261 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# AOC 22 - Day4
+
+## Index
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
+
+**Index**
+
+* [Puzzle 1](#camp-cleanup-(puzzle-1/2))
+* [Puzzle 2](#camp-cleanup-(puzzle-2/2))
+
+## Camp Cleanup (Puzzle 1/2)
+
+**Space needs to be cleared before the last supplies can be unloaded from the ships**🛳️
+🏕️, and so several Elves have been assigned the job of cleaning up sections of the camp🧹.
+
+Every **section** has a **unique ID number**, and **each Elf is assigned a range of section IDs**.
+
+However, as some of the Elves **compare their section assignments** with each other, they've **noticed** that **many of the assignments overlap**. To try to reduce duplicated effort, the **Elves pair up** and **make a big list of the section assignments for each pair** (your puzzle input).
+
+Example and meaning:
+
+```
+2-4,6-8
+2-3,4-5
+5-7,7-9
+2-8,3-7
+6-6,4-6
+2-6,4-8
+```
+
+* **First pair**, first elf was assigned sections `2,3,4` and the second one was assigned sections `6,7,8`.
+* **Second pair**, has no overlaps.
+* **Third pair**, first elf got sections `5,6,7` and the second got `7,8,9`.
+
+Some of the pairs have noticed that **one of their assignments fully contains the other**, for example:
+
+* **Fourth pair**: `2-8` contains `3-7`.
+* **Fifth pair**: `6-6` is fully contained by `4-6`.
+
+In this **example**, **there are 2 such pairs**.
+
+**In how many assignment pairs does one range fully contain the other?**
+
+```elixir
+test_input = [[2..4, 6..8], [2..3, 4..5], [5..7, 7..9], [2..8, 3..7], [6..6, 4..6], [2..6,4..8f]]
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[[2..4, 6..8], [2..3, 4..5], [5..7, 7..9], [2..8, 3..7], [6..6, 4..6], [2..6, 4..8]]
+```
+
+```elixir
+## Read the file
+
+# Livebook & Input file are in same directory
+input_root = "#{__DIR__}/input.txt"
+
+input =
+  case File.read(input_root) do
+    {:ok, input} ->
+      input
+      |> String.split(["\n", ",", "-"], trim: true)
+      |> Enum.chunk_every(4)
+      |> Enum.map(fn pair ->
+        [elf1_init, elf1_end, elf2_init, elf2_end] = pair
+
+        [
+          String.to_integer(elf1_init)..String.to_integer(elf1_end),
+          String.to_integer(elf2_init)..String.to_integer(elf2_end)
+        ]
+      end)
+
+    {:error, msg} ->
+      IO.inspect(msg)
+  end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[
+  [36..92, 35..78],
+  [26..31, 25..27],
+  [17..72, 16..71],
+  [3..77, 76..90],
+  [20..22, 21..87],
+  [5..75, 6..75],
+  [42..44, 43..95],
+  [51..73, 50..52],
+  [81..89, 80..81],
+  [7..58, 47..58],
+  [72..91, 20..92],
+  [27..64, 51..64],
+  [5..94, 94..95],
+  [88..93, 88..89],
+  [7..45, 46..91],
+  [30..40, 29..29],
+  [81..90, 80..90],
+  [4..71, 4..71],
+  [68..83, 65..84],
+  [1..4, 3..79],
+  [94..95, 35..82],
+  [30..84, 31..97],
+  [6..82, 81..86],
+  [88..88, 4..89],
+  [41..97, 40..89],
+  [95..99, 34..94],
+  [18..56, 18..56],
+  [53..64, 22..53],
+  [5..9, 9..71],
+  [18..41, 40..66],
+  [38..39, 38..78],
+  [23..99, 22..94],
+  [34..54, 34..53],
+  [33..76, 85..94],
+  [72..91, 63..79],
+  [33..94, 93..94],
+  [56..82, 20..56],
+  [60..85, 60..86],
+  [31..76, 31..33],
+  [29..79, 78..80],
+  [9..9, 66..69],
+  [6..97, 6..75],
+  [40..78, 39..77],
+  [14..30, 14..15],
+  [91..94, 88..98],
+  [1..23, 10..23],
+  [9..84, 7..9],
+  [75..76, 75..98],
+  [45..87, ...],
+  [...],
+  ...
+]
+```
+
+### Solving the exercise
+
+```elixir
+defmodule CampCleanupV1 do
+  @doc """
+  Returns 1 if any of both ranges is contained in the other, otherwise 0.
+
+  ## Examples
+  iex> CampCleanupV1.contains(1..10, 1..1)
+  1
+
+  iex> CampCleanupV1.contains(1..1, 1..10)
+  1
+
+  iex> CampCleanupV1.contains(1..5, 4..10)
+  0
+
+  iex> CampCleanupV1.contains(1..10, 11..111)
+  0
+  """
+  def contains(a..b, c..d) when a <= c and b >= d, do: 1
+  def contains(a..b, c..d) when a >= c and b <= d, do: 1
+  def contains(_, _), do: 0
+
+  def number_of_contains(input) do
+    input
+    |> Enum.reduce(0, fn pair, acc ->
+      [range1, range2] = pair
+      contains(range1, range2) + acc
+    end)
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, CampCleanupV1, <<70, 79, 82, 49, 0, 0, 10, ...>>, {:number_of_contains, 1}}
+```
+
+```elixir
+input
+|> CampCleanupV1.number_of_contains()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+494
+```
+
+## Camp Cleanup (Puzzle 2/2)
+
+It seems like there is still quite a bit of duplicate work planned. Instead, the Elves would like to know **the number of pairs that overlap at all**.
+
+Example:
+
+```
+2-4,6-8
+2-3,4-5
+5-7,7-9
+2-8,3-7
+6-6,4-6
+2-6,4-8
+```
+
+The first two pairs don't overlap, while the remaining four pairs `5-7, 7-9`, `2-8, 3-7`, `6-6, 4-6` and `2-6,4-8` do overlap. So, in this example, the number of overlapping assignment pairs is 4.
+
+**In how many assignment pairs do the ranges overlap?**
+
+```elixir
+defmodule CampCleanupV2 do
+  @doc """
+  Returns true if ranges are overlapped, otherwise false.
+
+  ## Examples
+  iex> CampCleanupV2.is_overlapped?(1..10, 1..1)
+  true
+
+  iex> CampCleanupV2.is_overlapped?(1..1, 1..10)
+  true
+
+  iex> CampCleanupV2.is_overlapped?(1..10, 7..111)
+  true
+
+  iex> CampCleanupV2.is_overlapped?(1..10, 11..111)
+  false
+  """
+  def is_overlapped?(range1, range2), do: not Range.disjoint?(range1, range2)
+
+  def number_of_overlapped(input) do
+    input
+    |> Enum.reduce(0, fn pair, acc ->
+      [range1, range2] = pair
+      ((is_overlapped?(range1, range2) && 1) || 0) + acc
+    end)
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, CampCleanupV2, <<70, 79, 82, 49, 0, 0, 10, ...>>, {:number_of_overlapped, 1}}
+```
+
+```elixir
+CampCleanupV2.number_of_overlapped(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+833
+```
+
+| Previous                     | Next                         |
+| ---------------------------- | ---------------------------: |
+| [Day 3](../Day3/Day3.livemd) | [Day 5](../Day5/Day5.livemd) |
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
