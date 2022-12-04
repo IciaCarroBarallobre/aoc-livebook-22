@@ -143,7 +143,7 @@ input =
 ```elixir
 defmodule CampCleanupV1 do
   @doc """
-  Return 1 if any of both ranges is contained in the other, otherwise 0.
+  Returns 1 if any of both ranges is contained in the other, otherwise 0.
 
   ## Examples
   iex> CampCleanupV1.contains(1..10, 1..1)
@@ -211,7 +211,7 @@ The first two pairs don't overlap, while the remaining four pairs `5-7, 7-9`, `2
 ```elixir
 defmodule CampCleanupV2 do
   @doc """
-  Return 1 iff any of the range is contained in the other, otherwise 0.
+  Returns true if ranges are overlapped, otherwise false.
 
   ## Examples
   iex> CampCleanupV2.is_overlapped?(1..10, 1..1)
