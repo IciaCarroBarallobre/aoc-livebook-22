@@ -42,6 +42,8 @@ Two puzzles will be made available on each day in the Advent calendar; the secon
 
 * [⭐ Day 3 ⭐](./Puzzles/Day3/Day3.livemd)
 
+* [⭐ Day 4 ⭐](./Puzzles/Day4/Day4.livemd)
+
   ...
 
 <!-- livebook:{"break_markdown":true} -->
