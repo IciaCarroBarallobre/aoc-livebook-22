@@ -1,0 +1,306 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# AOC 22 - Day3
+
+## Index
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
+
+**Index**
+
+* [Puzzle 1](#rucksack-reorganization-(puzzle-1/2))
+* [Puzzle 2](#rucksack-reorganization-(puzzle-2/2))
+
+## Rucksack Reorganization (Puzzle 1/2)
+
+An elf 🧝‍♀️ has to load all of the rucksacks with supplies for the jungle journey🌴. Unfortunately, that Elf didn't quite follow the packing instructions 📄, and so **a few items** now **need to be rearranged**.
+
+🎒**Each rucksack** has **2** large **compartments**.
+
+🥡All **items of a given type** are meant to go into **exactly 1** of the 2 **compartments**. 
+ Every **item type is identified** by a **single letter** (case sensitive).
+
+You have a **list of all of the items** currently in each rucksack made by the Elfs 📄 (your puzzle input). Each **line** is **rucksack**, taking into account that there are the same number of items in both compartments:
+
+* The **first half** represent items in the **first compartment**.
+* The **second half** represent items in the **second compartment**.
+
+Example:
+
+```
+vJrwpWtwJgWrhcsFMMfFFhFp
+jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+PmmdzqPrVvPwwTWBwg
+wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+ttgJtRGJQctTZtZT
+CrZsJsPPZsGzwwsLwLmpwMDw
+```
+
+* **1º Rucksack**: `vJrwpWtwJgWrhcsFMMfFFhFp`. 
+  * **1º compartment** contains `vJrwpWtwJgWr`.
+  * **2º compartment** contains `hcsFMMfFFhFp`.
+  * The **only item type** that appears **in both compartments** is lowercase `p`.
+* **2º Rucksack**, the only item type that appears in both compartments is uppercase `L`.
+* **3º Rucksack**, the only common item type is uppercase `P`.
+* **4º Rucksack**'s compartments only share item type `v`.
+* **5º Rucksack**'s compartments only share item type `t`.
+* **6º Rucksack**'s compartments only share item type `s`.
+
+✨ To help **prioritize item rearrangement**, **every item type** can be converted to a **priority**:
+
+* `a-z` => `1-26`.
+* `A-Z` => `27-52`.
+
+In the above example, the sum of priorities of each item type that appears in both compartments of each rucksack is `16 (p) + 38 (L) + 42 (P) + 22 (v) + 20 (t) + 19 (s) = 157`.
+
+Find the **item type** that **appears in both compartments of each rucksack**. **What is the sum of the priorities of those item types?**
+
+```elixir
+test_input = [
+  "vJrwpWtwJgWrhcsFMMfFFhFp",
+  "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
+  "PmmdzqPrVvPwwTWBwg",
+  "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
+  "ttgJtRGJQctTZtZT",
+  "CrZsJsPPZsGzwwsLwLmpwMDw"
+]
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+["vJrwpWtwJgWrhcsFMMfFFhFp", "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL", "PmmdzqPrVvPwwTWBwg",
+ "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn", "ttgJtRGJQctTZtZT", "CrZsJsPPZsGzwwsLwLmpwMDw"]
+```
+
+```elixir
+## Read the file
+
+# Livebook & Input file are in same directory
+input_root = "#{__DIR__}/input.txt"
+
+input =
+  case File.read(input_root) do
+    {:ok, input} ->
+      input
+      |> String.split("\n", trim: true)
+
+    {:error, msg} ->
+      IO.inspect(msg)
+  end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+["shzsFcPssFhjFssBzdpRcNHNZrpdJdJVJZ", "fwvMCntfCCbSbSbtDgDNrDtDtJHZVH", "GbCwwbwwnGrLhBzjFFFsWPhL",
+ "PpCqRsqqmmtCwMJC", "LHFrLLHDSNHlfWNhDzmjzzJlJzPJMvPJjQ", "SGSWDNrhZhPDSWDZLgVVRgbRppgpGVnpnn",
+ "GRRjbVjmJZlgMRzzrN", "FpDptHpfHfnpPTvDFTWpFPnPcMfNCClNrzcVcrMMzVsCZlsZ",
+ "TFTQDnvLHPFDtVbLwbjdGjdwwJ", "lhljvvhCjjzhjszzBPmnmGVZMGzG", "FbTcTwbtSFdtcMPnTBPQVnnBZT",
+ "SFMpHDtNDSSbSdwppvgJWjJCJJgWgvlJHH", "wzNCWpzCzJnWWpRRNdJrgHLhjfbLrHrchV",
+ "lBMStmPmmLQDPQZlshrdhgrfrcrrddgHgs", "mvGDGQSvDPBlGMLGCvCWpNvpzRWFwqRw", "stBttBThtDZqPWssPWZp",
+ "gRggwwggCGFSBBvPRpHZZrHdZLZq", "ccFJGCNJmmGQzbTDhnQhBBnB",
+ "HJqMqtZbJMmJTqtLtVMqhpfphNdQfhfzzjhhlHll", "rWSBrnwFwWCvwWCwBgPgCgzjQccQhhgRzcdQzjfcNfzR",
+ "CWBCwCvCvvwssWLMtJJGMdMZJsGV", "nFwSFQwsNrrsssSwCrhrCNnfcCRgJRMJTJcMfRzMCMCRvW",
+ "DdbGdLZLttllWWvTzgzzgR", "ZqGzPdLtDjBjDZGPZVmnhQFwqrFQhVFnss",
+ "sNNpCjttjsJjSpgpWjslCTnqqSVffrnhSfDhmhrhfm", "dBwcGzbPBHbbwZcwJbcTTFDFFFDVrdVmFdnDqf",
+ "HzGcczQPHGwzPzGHRctWlvRgtvJlvNlJvRNj", "cFNCFdvcCHvFBCZcwBfRSpttGhDmCghGShmSRt",
+ "QjLnTTzQVzTTnLMqhDgPhGDDSjGPrgSh", "TTJGnJJlLQdNWZWJNBJZ", "WHBpHcMDZHLDbHLtGCnmRmLNGmRqvsCC",
+ "PzTFzPPTJzrSbGsvnmqfsqfqRz", "dJSQQdVFQgjTrjQPWcWHbBVcZVccZtWp", "JDtnRtJzNzTTNlHc",
+ "rQPJFrLPGMMwrGPFwjFMVLjSTWHdWBTdSWdWZlcWTHlZ", "MGFrCvLLwrwPFVVhvLMGGtnqfsmRJgDnqbRgfbqmfC",
+ "jnTtFjcSSvctJjznzvFmpqqPMqQDRVpRqPzqQzVQ", "bhHBfrWpfHsfGNllRrRCPqDCqPqq",
+ "gsGZZpbWgbwHWGNgfZNjvLSTTjtnTgjSSSSJmL", "RLQNdVNnRQdQHVVLGpspNqvtsqptqpTtsp",
+ "MlRWwbRBBFMFjCTFTTFDvj", "WmlWBmBwwmrndnmLRHRQ", "WnftJWlfnWSHGCjWWWSCFqFGBDqBwMcDmmMmGmqD",
+ "pTNhpTrPhhhRPzbhrppLhThLgqDmwccwqPBmMMqnFBcwwmBB", "ZrhQTpzdjSVVtnvZ",
+ "jgtnJtBjtlTdJBZJVQBngQGDCGWpPGCcPWCbWdWMbcpP", "wHstNNttSHPDmHcMCp",
+ "rrFFSvLLNfsFtNSqrtfrhsNjjVTBVgVvnTBvTQvjTgjVZz", "qhZwlqFqFwlJwrDHqHcDvgcNzv",
+ "RCCTQmjCbQTBtRTbjJRDpBrgDHPPpPDvHccDPc", ...]
+```
+
+### Solving the exercise
+
+```elixir
+defmodule RucksackReorganizationV1 do
+  @a_upper 65
+  @z_upper 90
+  @a 97
+  @z 122
+
+  @doc """
+  Map values a-z to 1-26 and A-Z 27-52
+
+  ## Examples
+  iex> RucksackReorganization.calculate_priority('a')
+  1
+
+  iex> RucksackReorganizationV1.calculate_priority('Z')
+  52
+  """
+  def calculate_priority([number]) when is_integer(number) do
+    cond do
+      number in @a..@z -> number - @a + 1
+      number in @a_upper..@z_upper -> number - @a_upper + 27
+      true -> 0
+    end
+  end
+
+  @doc """
+  Split in 2 half lists, returning a tuple with each half part.
+  """
+  def split(list) do
+    Enum.split(list, round(length(list) / 2))
+  end
+
+  @doc """
+  Compare the elements in the rigth and left of a string and
+  returns the map_values/1 of the intersection.
+
+  ## Examples
+  iex> RucksackReorganizationV1.wrong_item_value("vJrwpWtwJgWrhcsFMMfFFhFp")
+  16
+
+  iex> RucksackReorganizationV1.wrong_item_value("jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL")
+  38
+  """
+  def wrong_item_value(string) do
+    {left, rigth} = string |> String.to_charlist() |> split()
+
+    MapSet.intersection(MapSet.new(left), MapSet.new(rigth))
+    |> MapSet.to_list()
+    |> calculate_priority()
+  end
+
+  def sum_of_priorities(input) do
+    input
+    |> Enum.map(fn string -> wrong_item_value(string) end)
+    |> Enum.sum()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, RucksackReorganizationV1, <<70, 79, 82, 49, 0, 0, 14, ...>>, {:sum_of_priorities, 1}}
+```
+
+```elixir
+input
+|> RucksackReorganizationV1.sum_of_priorities()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+8185
+```
+
+## Rucksack Reorganization (Puzzle 2/2)
+
+For safety, the **Elves are divided into groups of three** and **every Elf carries a badge that identifies their group** 🎒. For efficiency, within each group of three Elves, the **badge** is the **only item type carried by all** three Elves.
+
+🤔 The problem is that **someone forgot to put this year's updated authenticity sticker on the badges** ✔️. So the only way to tell which item type is the right one, it's **finding** the one item type that is **common between** all three Elves in **each group**.
+
+**Every set of three lines in your list corresponds to a single group**, but each group can have a different badge item type.
+
+Example:
+
+```
+vJrwpWtwJgWrhcsFMMfFFhFp
+jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+PmmdzqPrVvPwwTWBwg
+```
+
+And the second group's rucksacks are the next three lines:
+
+```
+wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+ttgJtRGJQctTZtZT
+CrZsJsPPZsGzwwsLwLmpwMDw
+```
+
+* **First group**, the only item type that appears in all three rucksacks is lowercase `r`.
+* **Second group**, their badge item type must be `Z`.
+
+**Find the item type that corresponds to the badges of each three-Elf group. What is the sum of the priorities of those item types?**
+
+```elixir
+defmodule RucksackReorganizationV2 do
+  @a_upper 65
+  @z_upper 90
+  @a 97
+  @z 122
+
+  @doc """
+  Map values a-z to 1-26 and A-Z 27-52
+
+  ## Examples
+  iex> RucksackReorganization.calculate_priority('a')
+  1
+
+  iex> RucksackReorganizationV1.calculate_priority('Z')
+  52
+  """
+  def calculate_priority([number]) when is_integer(number) do
+    cond do
+      number in @a..@z -> number - @a + 1
+      number in @a_upper..@z_upper -> number - @a_upper + 27
+      true -> 0
+    end
+  end
+
+  @doc """
+  Compare the set of elements of three charlists and
+  returns the map_values/1 of their intersection.
+
+  ## Examples
+  iex> RucksackReorganizationV2.badge(
+    "vJrwpWtwJgWrhcsFMMfFFhFp",
+    "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
+    "PmmdzqPrVvPwwTWBwg"
+  )
+  18
+
+  """
+  def badge(b1, b2, b3) do
+    MapSet.intersection(
+      MapSet.new(b1),
+      MapSet.new(b2)
+    )
+    |> MapSet.intersection(MapSet.new(b3))
+    |> MapSet.to_list()
+    |> calculate_priority()
+  end
+
+  def sum_of_priorities(input) do
+    input
+    |> Enum.map(&String.to_charlist/1)
+    |> Enum.chunk_every(3)
+    |> Enum.map(fn [rucksack1, rucksack2, rucksack3] -> badge(rucksack1, rucksack2, rucksack3) end)
+    |> Enum.sum()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, RucksackReorganizationV2, <<70, 79, 82, 49, 0, 0, 13, ...>>, {:sum_of_priorities, 1}}
+```
+
+```elixir
+input
+|> RucksackReorganizationV2.sum_of_priorities()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+2817
+```
+
+| Previous                     | Next                         |
+| ---------------------------- | ---------------------------: |
+| [Day 2](../Day2/Day2.livemd) | [Day 4](../Day4/Day4.livemd) |
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
