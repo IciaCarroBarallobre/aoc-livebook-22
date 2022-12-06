@@ -1,0 +1,446 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# AOC 22 - Day5
+
+## Index
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
+
+**Index**
+
+* [Puzzle 1](#supply-stacks-(puzzle-1/2))
+* [Puzzle 2](#supply-stacks-(puzzle-2/2))
+
+## Supply Stacks (Puzzle 1/2)
+
+The **expedition can depart** as soon as the **final supplies have been unloaded** from the ships⛵🏝️. The ship has a **giant cargo crane capable of moving crates between stacks** 📦🏗️. To ensure none of the boxes gets crushed or falls over, **it's necessary to rearrange them** (keeping the desired crates at the top of each stack).
+
+🧝‍♀️ The Elves don't want to interrupt the crane operator during this delicate procedure, but **they forgot to ask her which crate will end up where**, and they want **to be ready to unload them** as soon as possible so they can embark.
+
+However, they have **a drawing of the starting stacks of crates** and the **rearrangement procedure** (your puzzle input).
+
+Example:
+
+`````
+    [D]    
+[N] [C]    
+[Z] [M] [P]
+ 1   2   3 
+
+move 1 from 2 to 1
+move 3 from 1 to 3
+move 2 from 2 to 1
+move 1 from 1 to 2
+````
+
+In this example, there are 3 stacks of crates. 
+- Stack `1` contains two crates: `Z` is on the bottom, and `N` is on top. 
+- Stack `2` contains three crates; from bottom to top, they are `M`, `C`, and `D`. 
+- Stack `3` contains a single crate, `P`.
+
+Then, the rearrangement procedure is given. In each step of the procedure, a quantity of crates is moved from one stack to a different stack. 
+
+In the first step, of the above rearrangement procedure, one crate is moved from stack 2 to stack 1, resulting in this configuration:
+
+`````
+
+[D]        
+[N] [C]    
+[Z] [M] [P]
+ 1   2   3
+
+```
+In the second step, three crates are moved from stack 1 to stack 3. **Crates are moved one at a time**, so the first crate to be moved (D) ends up below the second and third crates:
+```
+
+```
+    [Z]
+    [N]
+[C] [D]
+[M] [P]
+```
+
+1   2   3
+
+```
+Then, both crates are moved from stack 2 to stack 1. Again, because crates are moved one at a time, crate C ends up below crate M:
+```
+
+```
+    [Z]
+    [N]
+```
+
+[M]     [D]
+[C]     [P]
+ 1   2   3
+
+```
+Finally, one crate is moved from stack 1 to stack 2:
+```
+
+```
+    [Z]
+    [N]
+    [D]
+```
+
+[C] [M] [P]
+ 1   2   3
+
+```
+
+The Elves just need to know **which crate will end up on top of each stack**; in this example, the top crates are: `1-C`, `2-M` and `3-Z`, so you should combine these together and give the Elves the message CMZ.
+
+**After the rearrangement procedure completes, what crate ends up on top of each stack?**
+```
+
+```elixir
+## Read the file
+
+# Livebook & Input file are in same directory
+input_root = "#{__DIR__}/input.txt"
+
+input =
+  case File.read(input_root) do
+    {:ok, input} ->
+      input
+
+    {:error, msg} ->
+      IO.inspect(msg)
+  end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+"            [L] [M]         [M]    \n        [D] [R] [Z]         [C] [L]\n        [C] [S] [T] [G]     [V] [M]\n[R]     [L] [Q] [B] [B]     [D] [F]\n[H] [B] [G] [D] [Q] [Z]     [T] [J]\n[M] [J] [H] [M] [P] [S] [V] [L] [N]\n[P] [C] [N] [T] [S] [F] [R] [G] [Q]\n[Z] [P] [S] [F] [F] [T] [N] [P] [W]\n 1   2   3   4   5   6   7   8   9 \n\nmove 7 from 3 to 9\nmove 5 from 8 to 9\nmove 3 from 9 to 5\nmove 6 from 9 to 2\nmove 9 from 9 to 3\nmove 3 from 7 to 3\nmove 8 from 2 to 3\nmove 9 from 3 to 1\nmove 11 from 3 to 8\nmove 5 from 6 to 9\nmove 1 from 6 to 3\nmove 1 from 2 to 7\nmove 1 from 4 to 8\nmove 1 from 3 to 9\nmove 4 from 4 to 3\nmove 6 from 8 to 3\nmove 2 from 8 to 2\nmove 4 from 9 to 3\nmove 3 from 2 to 5\nmove 2 from 5 to 4\nmove 5 from 3 to 4\nmove 11 from 1 to 4\nmove 1 from 7 to 6\nmove 1 from 3 to 5\nmove 2 from 1 to 9\nmove 1 from 1 to 4\nmove 7 from 5 to 8\nmove 21 from 4 to 6\nmove 6 from 6 to 2\nmove 6 from 8 to 9\nmove 5 from 8 to 5\nmove 2 from 2 to 7\nmove 4 from 3 to 7\nmove 1 from 2 to 6\nmove 1 from 2 to 5\nmove 2 from 2 to 7\nmove 4 from 3 to 7\nmove 1 from 4 to 6\nmove 9 from 5 to 3\nmove 7 from 3 to 4\nmove 7 from 7 to 3\nmove 7 from 4 to 1\nmove 8 from 3 to 5\nmove 1 from 3 to 5\nmove 3 from 8 to 2\nmove 2 from 2 to 9\nmove 13 from 9 to 4\nmove 5 from 5 to 3\nmove 4 from 7 to 6\nmove 1 from 7 to 4\nmove 2 from 4 to 2\nmove 3 from 3 to 4\nmove 2 from 5 to 2\nmove 6 from 1 to 7\nmove 1 from 2 to 8\nmove 1 from 3 to 8\nmove 1 from 1 to 6\nmove 1 from 3 to 4\nmove 1 from 2 to 6\nmove 24 from 6 to 1\nmove 3 from 2 to 3\nmove 3 from 3 to 5\nmove 2 from 8 to 6\nmove 2 from 5 to 4\nmove 3 from 5 to 1\nmove 7 from 4 to 8\nmove 3 from 8 to 9\nmove 2 from 9 to 5\nmove 2 from 6 to 3\nmove 1 from 9 to 8\nmove 5 from 7 to 5\nmove 2 from 3 to 1\nmove 1 from 7 to 1\nmove 7 from 4 to 7\nmove 2 from 4 to 8\nmove 6 from 8 to 6\nmove 3 from 6 to 9\nmove 10 from 5 to 1\nmove 7 from 7 to 1\nmove 1 from 4 to 9\nmove 1 from 6 to 3\nmove 2 from 9 to 7\nmove 1 from 4 to 2\nmove 1 from 9 to 5\nmove 1 from 8 to 5\nmove 39 from 1 to 8\nmove 1 from 2 to 5\nmove 2 from 6 to 9\nmove 3 from 9 to 5\nmove 3 from 1 to 6\nmove 1 from 7 to 2\nmove 1 from 3 to 2\nmove 2 from 6 to 2\nmove 3 from 2 to 3\nmove 1 from 6 to 2\nmove 1 from 1 to 8\nmove 3 from 1 to 2\nmove 3 from 2 to 4\nmove 2 from 4 to 5\nmove 2 from 3 to 8\nmove 8 from 5 to 2\nmove 8 from 8 to 2\nmove 15 from 2 to 7\nmove 1 from 1 to 5\nmove 25 from 8 to 7\nmove 2 from 2 to 4\nmove 2 from 4 to 3\nmove 1 from 8 to 4\nmove 2 from 4 to 6\nmove 1 from 2 to 1\nmove 26 from 7 to 2\nmove 15 from 2 to 1\nmove 7 from 8 to 9\nmove 10 from 1 to 6\nmove 10 from 7 to 2\nmove 1 from 8 to 1\nmove 5 from 9 to 8\nmove 1 from 8 to 9\nmove 2 from 6 to 9\nmove 3 from 7 to 1\nmove 1 from 7 to 1\nmove 5 from 9 to 2\nmove 1 from 3 to 1\nmove 9 from 6 to 3\nmove 1 from 6 to 1\nmove 4 from 2 to 4\nmove 3 from 4 to 8\nmove 1 from 4 to 1\nmove 9 from 3 to 1\nmove 1 from 7 to 6\nmove 9 from 2 to 5\nmove 14 from 1 to 6\nmove 1 from 3 to 8\nmove 5 from 2 to 6\nmove 8 from 1 to 8\nmove 6 from 6 to 8\nmove 14 from 6 to 7\nmove 1 from 1 to 7\nmove 10 from 5 to 4\nmove 11 from 8 to 5\nmove 15 from 7 to 1\nmove 4 from 5 to 6\nmove 4 from 8 to 9\nmove 6 from 5 to 3\nmove 1 from 6 to 9\nmove 1 from 1 to 6\nmove 1 from 5 to 8\nmove 2 from 6 to 2\nmove 6 from 1 to 5\nmove 1 from 5 to 8\nmove 2 from 5 to 4\nmove 9 from 2 to 9\nmove 13 from 9 to 8\nmove 1 from 2 to 1\nmove 1 from 4 to 8\nmove 3 from 3 to 1\nmove 2 from 4 to 5\nmove 2 from 1 to 5\nmove 1 from 9 to 3\nmove 17 from 8 to 1\nmove 3 from 3 to 2\nmove 4 from 5 to 1\nmove 2 from 2 to 4\nmove 1 from 6 to 1\nmove 1 from 2 to 8\nmove 4 from 4 to 6\nmove 1 from 5 to 9\nmove 5 from 6 to 8\nmove 1 from 5 to 4\nmove 1 from 5 to 6\nmove 3 from 8 to 6\nmove 8 from 4 to 5\nmove 32 from 1 to 7\nmove 11 from 7 to 6\nmove 8 from 5 to 3\nmove 3 from 8 to 7\nmove 6 from 3 to 9\nmove 4 from 3 to 8\nmove 5 from 8 to 2\nmove 1 from 8 to 5\nmove 11 from 6 to 3\nmove 1 from 5 to 2\nmove 2 from 8 to 6\nmove 12 from 7 to 8\nmove 2 from 6 to 2\nmove 2 from 6 to 4\nmove 5 from 2 to 5\nmove 8 from 7 to 2\nmove 2 from 7 to 1\nmove 2 from 7 to 6\nmove 5 from 5 to 4\nmove 5 from 4 to 7\nmove 5 from 8 to 2\nmove 2 from 9 to 7\nmove 5 from 8 to 4\nmove 2 from 7 to 3\nmove 2 from 9 to 3\nmove" <> ...
+```
+
+```elixir
+defmodule Utils do
+  def get_moves(moves) do
+    Regex.scan(~r/move (\d+) from (\d+) to (\d+)/, moves, capture: :all_but_first)
+    |> Enum.map(fn [number, to, from] ->
+      [String.to_integer(number), String.to_integer(to), String.to_integer(from)]
+    end)
+  end
+
+  def get_state(state) do
+    state =
+      state
+      |> String.replace("    ", "[0]")
+      |> String.split("\n")
+      |> Enum.map(fn row ->
+        row
+        |> String.codepoints()
+        |> Enum.filter(fn value -> value not in ["[", "]", " "] end)
+      end)
+      |> Enum.zip()
+      |> Enum.map(fn column ->
+        column
+        |> Tuple.to_list()
+        |> Enum.filter(fn value -> value not in ["0"] end)
+      end)
+
+    for i <- 1..length(state), into: %{}, do: {i, Enum.at(state, i - 1)}
+  end
+
+  def format_input(input) do
+    [state, moves] = input |> String.split("\n\n", trim: true)
+    %{state: get_state(state), moves: get_moves(moves)}
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, Utils, <<70, 79, 82, 49, 0, 0, 17, ...>>, {:format_input, 1}}
+```
+
+```elixir
+input = Utils.format_input(input)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{
+  moves: [
+    [7, 3, 9],
+    [5, 8, 9],
+    [3, 9, 5],
+    [6, 9, 2],
+    [9, 9, 3],
+    [3, 7, 3],
+    [8, 2, 3],
+    [9, 3, 1],
+    [11, 3, 8],
+    [5, 6, 9],
+    [1, 6, 3],
+    [1, 2, 7],
+    [1, 4, 8],
+    [1, 3, 9],
+    [4, 4, 3],
+    [6, 8, 3],
+    [2, 8, 2],
+    [4, 9, 3],
+    [3, 2, 5],
+    [2, 5, 4],
+    [5, 3, 4],
+    [11, 1, 4],
+    [1, 7, 6],
+    [1, 3, 5],
+    [2, 1, 9],
+    [1, 1, 4],
+    [7, 5, 8],
+    [21, 4, 6],
+    [6, 6, 2],
+    [6, 8, 9],
+    [5, 8, 5],
+    [2, 2, 7],
+    [4, 3, 7],
+    [1, 2, 6],
+    [1, 2, 5],
+    [2, 2, 7],
+    [4, 3, 7],
+    [1, 4, 6],
+    [9, 5, 3],
+    [7, 3, 4],
+    [7, 7, 3],
+    [7, 4, 1],
+    [8, 3, 5],
+    [1, 3, 5],
+    [3, 8, 2],
+    [2, 2, 9],
+    [13, 9, ...],
+    [5, ...],
+    [...],
+    ...
+  ],
+  state: %{
+    1 => ["R", "H", "M", "P", "Z", "1"],
+    2 => ["B", "J", "C", "P", "2"],
+    3 => ["D", "C", "L", "G", "H", "N", "S", "3"],
+    4 => ["L", "R", "S", "Q", "D", "M", "T", "F", "4"],
+    5 => ["M", "Z", "T", "B", "Q", "P", "S", "F", "5"],
+    6 => ["G", "B", "Z", "S", "F", "T", "6"],
+    7 => ["V", "R", "N", "7"],
+    8 => ["M", "C", "V", "D", "T", "L", "G", "P", "8"],
+    9 => ["L", "M", "F", "J", "N", "Q", "W", "9"]
+  }
+}
+```
+
+```elixir
+input_test = %{
+  state: %{1 => ["N", "Z"], 2 => ["D", "C", "M"], 3 => ["P"]},
+  moves: [[1, 2, 1], [3, 1, 3], [2, 2, 1], [1, 1, 2]]
+}
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{
+  moves: [[1, 2, 1], [3, 1, 3], [2, 2, 1], [1, 1, 2]],
+  state: %{1 => ["N", "Z"], 2 => ["D", "C", "M"], 3 => ["P"]}
+}
+```
+
+### Solving the exercise
+
+```elixir
+defmodule SupplyStacks do
+  @doc """
+  Pick elements, one by one, and deposite them in a list.
+
+  ## Examples
+
+  iex> SupplyStacksV1.pick9000([1,2,3], 2)
+  [2,1]
+
+  iex> SupplyStacksV1.pick9000([1,2,3], 5)
+  ** (FunctionClauseError) no function clause matching in SupplyStacksV1.pick/2 
+
+  """
+  def pick9000(rest, 0, picked), do: {rest, picked}
+  def pick9000([h | t], n, picked), do: pick9000(t, n - 1, [h | picked])
+  def pick9000(list, n) when length(list) >= n, do: pick9000(list, n, [])
+
+  @doc """
+  Pick an amount of elements and deposite them in a list.
+
+  ## Examples
+
+  iex> SupplyStacksV1.pick9001([1,2,3], 2)
+  [1,2]
+
+  iex> SupplyStacksV1.pick9001([1,2,3], 5)
+  ** (FunctionClauseError) no function clause matching in SupplyStacksV1.pick/2 
+
+  """
+  def pick9001(list, n) when length(list) >= n, do: {Enum.drop(list, n), Enum.take(list, n)}
+
+  def apply_moves(state, [], _pick_function), do: state
+
+  def apply_moves(state, [[amount, from, to] | moves], pick_function) do
+    {new_list_from, picked} = pick_function.(state[from], amount)
+
+    new_state =
+      state
+      |> Map.put(to, picked ++ state[to])
+      |> Map.put(from, new_list_from)
+
+    apply_moves(new_state, moves, pick_function)
+  end
+
+  @doc """
+  Giving a pick function, and a initial state, apply the moves.
+  ## Examples
+
+  iex> SupplyStacksV1.apply_moves_9000(%{1 => ["D", "N", "Z"], 2 => ["C", "M"], 3 => ["P"]}, [[3, 1, 3]])
+  %{1 => [], 2 => ["C", "M"], 3 => ["Z", "N", "D", "P"]}
+
+  """
+  def apply_moves_9000(state, moves), do: apply_moves(state, moves, &pick9000/2)
+
+  @doc """
+  Giving a pick function, and a initial state, apply the moves.
+  ## Examples
+
+  iex> SupplyStacksV1.apply_moves_9001(%{1 => ["D", "N", "Z"], 2 => ["C", "M"], 3 => ["P"]}, [[3, 1, 3]])
+  %{1 => [], 2 => ["C", "M"], 3 => ["D", "N", "Z", "P"]}
+
+  """
+  def apply_moves_9001(state, moves), do: apply_moves(state, moves, &pick9001/2)
+
+  def stack_heads(map) do
+    map
+    |> Enum.reduce([], fn {_key, [h | _t]}, acc -> [h | acc] end)
+    |> Enum.reverse()
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, SupplyStacks, <<70, 79, 82, 49, 0, 0, 16, ...>>, {:stack_heads, 1}}
+```
+
+```elixir
+input_test
+|> then(&SupplyStacks.apply_moves_9000(&1.state, &1.moves))
+|> SupplyStacks.stack_heads()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+["C", "M", "Z"]
+```
+
+```elixir
+input
+|> then(&SupplyStacks.apply_moves_9000(&1.state, &1.moves))
+|> SupplyStacks.stack_heads()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+["V", "Q", "Z", "N", "J", "M", "W", "T", "R"]
+```
+
+## Supply Stacks (Puzzle 2/2)
+
+As you watch the crane operator expertly rearrange the crates, you notice **the process isn't following your prediction**. 😲😲
+
+Some mud was covering the writing on the side of the crane, and you quickly wipe it away. The crane isn't a CrateMover 9000 - it's a CrateMover 9001.
+
+The CrateMover 9001 is notable for many new and exciting features: air conditioning, leather seats, an extra cup holder, and **the ability to pick up and move multiple crates at once**.
+
+Again considering the example above, the crates begin in the same configuration:
+
+```
+    [D]    
+[N] [C]    
+[Z] [M] [P]
+ 1   2   3 
+```
+
+Moving a single crate from stack 2 to stack 1 behaves the same as before:
+
+```
+[D]        
+[N] [C]    
+[Z] [M] [P]
+ 1   2   3 
+```
+
+However, the action of moving three crates from stack 1 to stack 3 means that those three moved crates stay in the same order, resulting in this new configuration:
+
+```
+        [D]
+        [N]
+    [C] [Z]
+    [M] [P]
+ 1   2   3
+```
+
+Next, as both crates are moved from stack 2 to stack 1, they retain their order as well:
+
+```
+        [D]
+        [N]
+[C]     [Z]
+[M]     [P]
+ 1   2   3
+```
+
+Finally, a single crate is still moved from stack 1 to stack 2, but now it's crate C that gets moved:
+
+```
+
+        [D]
+        [N]
+        [Z]
+[M] [C] [P]
+ 1   2   3
+```
+
+In this example, the CrateMover 9001 has put the crates in a totally different order: `MCD`.
+
+Before the rearrangement process finishes, update your simulation so that the Elves know where they should stand to be ready to unload the final supplies. **After the rearrangement procedure completes, what crate ends up on top of each stack?**
+
+```elixir
+input_test
+|> then(&SupplyStacks.apply_moves_9001(&1.state, &1.moves))
+|> SupplyStacks.stack_heads()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+["M", "C", "D"]
+```
+
+```elixir
+input
+|> then(&SupplyStacks.apply_moves_9001(&1.state, &1.moves))
+|> SupplyStacks.stack_heads()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+["N", "L", "C", "D", "C", "L", "V", "M", "Q"]
+```
+
+| Previous                     | Next                         |
+| ---------------------------- | ---------------------------: |
+| [Day 4](../Day4/Day4.livemd) | [Day 6](../Day6/Day6.livemd) |
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
