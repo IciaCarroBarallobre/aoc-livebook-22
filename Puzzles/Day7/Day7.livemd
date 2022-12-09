@@ -1,0 +1,470 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# AOC 22 - Day7
+
+## Index
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
+
+**Index**
+
+* [Puzzle 1](#no-space-left-on-device-(puzzle-1/2))
+* [Puzzle 2](#no-space-left-on-device-(puzzle-2/2))
+
+## No Space Left On Device (Puzzle 1/2)
+
+📲 When you try to update the device the Elves gave you...
+
+```
+$ system-update --please --pretty-please-with-sugar-on-top
+Error: No space left on device
+```
+
+🗑️ Perhaps you can **delete some files to make space for the update**.
+
+You browse around the filesystem to assess the situation and save the resulting terminal output (your puzzle input). Example:
+
+```
+$ cd /
+$ ls
+dir a
+14848514 b.txt
+8504156 c.dat
+dir d
+$ cd a
+$ ls
+dir e
+29116 f
+2557 g
+62596 h.lst
+$ cd e
+$ ls
+584 i
+$ cd ..
+$ cd ..
+$ cd d
+$ ls
+4060174 j
+8033020 d.log
+5626152 d.ext
+7214296 k
+```
+
+The **filesystem** consists of a **tree of files and directories**, which can contain other directories or files. The **outermost directory** is called `/`.
+
+You can navigate around the filesystem, moving into or out of directories and listing the contents of the directory you're currently in. Within the terminal output, **lines** that **begin with `$`** are **commands** you executed:
+
+* `cd` means **change directory**. Its result depends on the current directory and on the argument:
+  * `cd x` **moves into x directory**, if exist in this level.
+  * `cd ..` **moves out one level**.
+  * `cd /` switches the current directory **to the outermost directory**, `/`.
+* `ls` means **list**, which **prints out** **all** of the **files** and **directories immediately contained** by the **current directory**.
+  * `123 abc` means that the **current directory contains** a **file named `abc`** with **size `123`**.
+  * `dir xyz` means that the **current directory contains** a **directory named `xyz`**.
+
+In the example above, taking into account the commands, you can determine that the filesystem looks like this:
+
+```
+  /             # dir
+  |
+  |_ a          # dir
+  |  |_ e       # dir
+  |  |  |_ i    # file, size = 584
+  |  |
+  |  |_ f       # file, size = 29116
+  |  |_ g       # file, size = 2557
+  |  |_ h.lst   # file, size = 62596
+  |_ b.txt      # file, size = 14848514
+  |_c.dat       # file, size = 8504156
+  |_d           # dir
+    |_ j        # file, size = 4060174
+    |_ d.log    # file, size = 8033020
+    |_ d.ext    # file, size = 5626152
+    |_ k        # file, size = 7214296
+```
+
+So, you want to **find directories** that are **good candidates for deletion**, and to do this, you need to **determine the total size** of **each directory**.
+
+In the example, the total sizes of the directories can be found as follows:
+
+* For `e`: `e = 584 (i) + 0 (content)`.
+* For `a`: `a = 94853 = 584 (e) + 29116 + 2557 + 62596 (files)`.
+* For `d`: `d = 24933642`.
+* For `/`: `/ = 48381165 (dirs: a, d + files: c.dat, b.txt)`, which is the total of every file.
+
+To begin, **find all of the directories** with a **total size of at most 100_000 (`dir_total_size < 100_000`**),then **calculate the sum of their total sizes**.
+
+In the example above, these directories are `a` and `e`; the sum of their total sizes is `95437 (94853 + 584)`.
+
+**Find all of the directories with a total size of at most 100000. What is the sum of the total sizes of those directories?**
+
+```elixir
+defmodule Utils do
+  def get_current_dir_name(string) do
+    [[cd]] = Regex.scan(~r/^\s*([\/\.\w]+)\s*/, string, capture: :all_but_first)
+    cd
+  end
+
+  def get_direct_successor_names(string) do
+    Regex.scan(~r/dir (\w+)/, string, capture: :all_but_first)
+    |> List.flatten()
+  end
+
+  def get_direct_size(string) do
+    files = Regex.scan(~r/(\d+) \w+\.*\w*/, string, capture: :all_but_first)
+
+    (files == [] && 0) ||
+      Enum.reduce(files, 0, fn [size], acc -> acc + String.to_integer(size) end)
+  end
+
+  def transform_commands_into_a_file_system_tree(commands) do
+    {nodes, _path} =
+      commands
+      |> Enum.reduce(
+        {[], []},
+        fn string, {nodes, path} ->
+          name = get_current_dir_name(string)
+
+          case name do
+            ".." ->
+              [_cd | predecessors] = path
+              {nodes, predecessors}
+
+            "/" ->
+              successors = get_direct_successor_names(string)
+              size = get_direct_size(string)
+
+              {
+                [{[name], %{successors: successors, content: size}} | nodes],
+                [name | path]
+              }
+
+            _ ->
+              successors = get_direct_successor_names(string)
+              size = get_direct_size(string)
+              path_root = [name | path]
+
+              {
+                [
+                  {path_root, %{successors: successors, content: size}}
+                  | nodes
+                ],
+                [name | path]
+              }
+          end
+        end
+      )
+
+    Map.new(nodes)
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, Utils, <<70, 79, 82, 49, 0, 0, 18, ...>>,
+ {:transform_commands_into_a_file_system_tree, 1}}
+```
+
+```elixir
+## Read the file
+
+# Livebook & Input file are in same directory
+input_root = "#{__DIR__}/input.txt"
+
+nodes_with_direct_size =
+  case File.read(input_root) do
+    {:ok, input} ->
+      [_ignore_split_first | commands] =
+        input
+        |> String.replace("\n", " ")
+        |> String.split("$ cd")
+
+      Utils.transform_commands_into_a_file_system_tree(commands)
+
+    {:error, msg} ->
+      IO.inspect(msg)
+  end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+%{
+  ["mmhtpz", "mmhtpz", "dscbfp", "/"] => %{content: 0, successors: ["hmwqgjnl"]},
+  ["rgvvz", "gmcpd", "drpt", "hmwqgjnl", "lbbg", "wqc", "dscbfp", "/"] => %{
+    content: 0,
+    successors: ["tjqcj"]
+  },
+  ["wwwj", "tbwhzrtt", "zph", "dscbfp", "/"] => %{content: 14000, successors: ["lcttc"]},
+  ["dwdnwdz", "cmnv", "cwr", "fccbrtcn", "hmwqgjnl", "wqc", "dscbfp", "/"] => %{
+    content: 0,
+    successors: ["hvgwfj"]
+  },
+  ["vnrgqg", "qdztzhl", "zwlpm", "dscbfp", "/"] => %{
+    content: 1041412,
+    successors: ["fpmpzvj", "gtqwbhc", "lnw", "mmhtpz"]
+  },
+  ["rgvvz", "pwvgqth", "hmwqgjnl", "wqc", "dscbfp", "/"] => %{content: 269675, successors: []},
+  ["jrjgnch", "rgvvz", "hmwqgjnl", "dscbfp", "/"] => %{content: 4426, successors: ["zbnp"]},
+  ["jsjrg", "zrpgb", "qdztzhl", "zwlpm", "dscbfp", "/"] => %{content: 230757, successors: []},
+  ["hmwqgjnl", "wqc", "dscbfp", "/"] => %{
+    content: 401549,
+    successors: ["fccbrtcn", "pwvgqth", "wllwhm"]
+  },
+  ["mmhtpz", "dscbfp", "/"] => %{
+    content: 129796,
+    successors: ["dscbfp", "mmhtpz", "nzdvqb", "ztbht"]
+  },
+  ["wmgqpt", "hrl", "hmwqgjnl", "zrpgb", "qdztzhl", "zwlpm", "dscbfp", "/"] => %{
+    content: 610554,
+    successors: ["hmwqgjnl"]
+  },
+  ["pntqg", "dwtfrgj", "hmwqgjnl", "dscbfp", "/"] => %{content: 131070, successors: []},
+  ["hmwqgjnl", "zdmb", "dscbfp", "dscbfp", "mmhtpz", "dscbfp", "/"] => %{
+    content: 578648,
+    successors: []
+  },
+  ["pfsq", "dscbfp", "hbpwd", "jvr", "dscbfp", "/"] => %{content: 249351, successors: ["hmwqgjnl"]},
+  ["hmwqgjnl", "rgvvz", "wrb", "rgvvz", "hmwqgjnl", "dscbfp", "/"] => %{
+    content: 99756,
+    successors: []
+  },
+  ["rgvvz", "zdmb", "dscbfp", "dscbfp", "mmhtpz", "dscbfp", "/"] => %{
+    content: 521242,
+    successors: ["fpzzfc", "zgn"]
+  },
+  ["hmwqgjnl", "tqb", "dscbfp", "qdztzhl", "zwlpm", "dscbfp", "/"] => %{
+    content: 0,
+    successors: ["mlmmr"]
+  },
+  ["gtcg", "dscbfp", "cmnv", "cwr", "fccbrtcn", "hmwqgjnl", "wqc", "dscbfp", "/"] => %{
+    content: 73017,
+    successors: []
+  },
+  ["hgl", "rvm", "dscbfp", "hmwqgjnl", "lbbg", "wqc", "dscbfp", "/"] => %{
+    content: 303842,
+    successors: []
+  },
+  ["nfn", "mfq", "jzb", "hmwqgjnl", "mmhtpz", "mmhtpz", "dscbfp", "/"] => %{
+    content: 239922,
+    successors: []
+  },
+  ["zdwhqb", "fccbrtcn", "hmwqgjnl", "wqc", "dscbfp", "/"] => %{content: 464641, successors: []},
+  ["dwtfrgj", "hmwqgjnl", "dscbfp", "/"] => %{content: 0, successors: ["jwmw", "pntqg"]},
+  ["zbnp", "jrjgnch", "rgvvz", "hmwqgjnl", "dscbfp", "/"] => %{content: 335940, successors: []},
+  ["mmhtpz", "lbbg", "zfsbvs", "/"] => %{content: 25218, successors: []},
+  ["mdrddz", "mmhtpz", "dscbfp", "jwmw", "dwtfrgj", "hmwqgjnl", "dscbfp", "/"] => %{
+    content: 167704,
+    successors: []
+  },
+  ["rvm", "dscbfp", "hmwqgjnl", "lbbg", "wqc", "dscbfp", "/"] => %{content: 0, successors: ["hgl"]},
+  ["tpsvqmgb", "mmhtpz", "zwlpm", "dscbfp", "/"] => %{content: 0, successors: ["bpmqlq"]},
+  ["pplp", "fsz", "lbbg", "wqc", "dscbfp", "/"] => %{content: 339988, successors: []},
+  ["fgwnpp", "wrb", "rgvvz", "hmwqgjnl", "dscbfp", "/"] => %{
+    content: 505310,
+    successors: ["gdfrtgl", "zlgpdb"]
+  },
+  ["bjn", "dscbfp", "hmwqgjnl", "lbbg", "wqc", "dscbfp", "/"] => %{content: 119619, successors: []},
+  ["cddzd", "dscbfp", "mmhtpz", "dscbfp", "/"] => %{content: 255928, successors: []},
+  ["hbpwd", "jvr", "dscbfp", "/"] => %{content: 859431, successors: ["dscbfp"]},
+  ["hmwqgjnl", "rgvvz", "hmwqgjnl", "dscbfp", "/"] => %{content: 488848, successors: ["hsmr"]},
+  ["pwrfgjdg", "zwlpm", "dscbfp", "/"] => %{content: 205506, successors: []},
+  ["dscbfp", "mmhtpz", "dscbfp", "/"] => %{
+    content: 142689,
+    successors: ["cddzd", "dscbfp", "hmwqgjnl", "whbjm"]
+  },
+  ["hjrs", "vzjh", "wrb", "rgvvz", "hmwqgjnl", "dscbfp", "/"] => %{content: 146991, successors: []},
+  ["pljsm", "dscbfp", "hbpwd", "jvr", "dscbfp", "/"] => %{content: 263279, successors: []},
+  ["hmwqgjnl", "zph", "dscbfp", "/"] => %{content: 286234, successors: []},
+  ["hmwqgjnl", "cndf", "wqc", "dscbfp", "/"] => %{content: 91921, successors: []},
+  ["dscbfp", "frqb", "rdnf", "wrb", "rgvvz", "hmwqgjnl", "dscbfp", "/"] => %{
+    content: 280820,
+    successors: []
+  },
+  ["mlmmr", "hmwqgjnl", "tqb", "dscbfp", "qdztzhl", "zwlpm", "dscbfp", "/"] => %{
+    content: 0,
+    successors: ["rgvvz"]
+  },
+  ["hmwqgjnl", "wfhcc", "znl", "dscbfp", "/"] => %{content: 0, successors: ["fnmqpt"]},
+  ["dpds", "wfhcc", "znl", "dscbfp", "/"] => %{content: 426728, successors: []},
+  ["hvgwfj", "dwdnwdz", "cmnv", "cwr", "fccbrtcn", "hmwqgjnl", ...] => %{
+    content: 235064,
+    successors: []
+  },
+  ["dscbfp", "hmwqgjnl", "dscbfp", "/"] => %{content: 146043, successors: []},
+  ["dscbfp", "hmwqgjnl", "lbbg", "wqc", ...] => %{content: 0, successors: ["bjn", "rvm"]},
+  ["tqb", "dscbfp", "qdztzhl", ...] => %{content: 101550, successors: ["hmwqgjnl"]},
+  ["tlgtcb", "dscbfp", ...] => %{content: 557090, successors: [...]},
+  ["nlffhf", ...] => %{content: 776280, ...},
+  [...] => %{...},
+  ...
+}
+```
+
+```elixir
+defmodule Device.FileSystem do
+  @total_memory 70_000_000
+  @doc """
+  Giving a level of the tree, return all its nodes in this certain level.
+
+  ## Examples
+
+  iex> Device.FileSystem.get_level(%{["/"] => "", ["nana", "/"] => ""}, 1)
+  [{["nana", "/"], ""}]
+
+  """
+  def get_level(nodes, n), do: Enum.filter(nodes, fn {key, _info} -> length(key) - 1 == n end)
+
+  @doc """
+  Giving a tree, return the number that represents its deep node
+  ## Examples
+
+  iex> Device.FileSystem.get_deep_level(%{["/"] => "", ["/", "nana"] => "", ["/", "na"] => ""})
+  1
+
+  """
+  def get_deep_level(nodes) do
+    nodes
+    |> Enum.reduce(0, fn {key, _info}, acc ->
+      level = length(key) - 1
+      (level > acc && level) || acc
+    end)
+  end
+
+  @doc """
+  From the deepest nodes to the highest node, sum all the content of each node and its successors.  
+
+  ## Examples
+
+  iex> tree =
+  %{
+    ["/"] => %{content: 10, successors: ["nana", "na"]},
+    ["nana", "/"] => %{content: 5, successors: []},
+    ["na", "/"] => %{content: 52, successors: []}
+  }
+  |> Device.FileSystem.calculate_total_size_nodes()
+  ) 
+  |> Device.FileSystem.calculate_total_size_nodes()
+
+
+  """
+  def calculate_total_size_nodes(nodes, -1), do: nodes
+
+  def calculate_total_size_nodes(nodes, level) do
+    nodes_with_total_size_at_x_level =
+      nodes
+      |> get_level(level)
+      |> Enum.map(fn {key, info} ->
+        {
+          key,
+          info.content +
+            Enum.sum(
+              for successor_name <- info.successors do
+                successor_key = [successor_name | key]
+                nodes[successor_key].content
+              end
+            )
+        }
+      end)
+
+    # Update nodes at current level 
+    Enum.reduce(
+      nodes_with_total_size_at_x_level,
+      nodes,
+      fn {key, value}, nodes ->
+        %{nodes | key => %{nodes[key] | content: value}}
+      end
+    )
+    # Continue updating nodes content from previous level
+    |> calculate_total_size_nodes(level - 1)
+  end
+
+  def calculate_total_size_nodes(nodes) do
+    number_of_deep_level = get_deep_level(nodes)
+    calculate_total_size_nodes(nodes, number_of_deep_level)
+  end
+
+  def get_dirs_with_at_most_n_size(nodes, n) do
+    nodes
+    |> Enum.filter(fn {_key, info} -> info.content <= n end)
+  end
+
+  def get_minimum_space_dir_deletion_to_allows_the_update(nodes_with_total_size, required_space) do
+    used_space = nodes_with_total_size[["/"]].content
+    free_space = @total_memory - used_space
+    have_to_delete_at_least = required_space - free_space
+
+    if(have_to_delete_at_least > 0) do
+      Enum.filter(nodes_with_total_size, fn {_key, info} ->
+        info.content >= have_to_delete_at_least
+      end)
+      |> Enum.min_by(fn {_key, info} -> info.content end)
+    else
+      nil
+    end
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, Device.FileSystem, <<70, 79, 82, 49, 0, 0, 27, ...>>,
+ {:get_minimum_space_dir_deletion_to_allows_the_update, 2}}
+```
+
+```elixir
+nodes_with_total_size =
+  nodes_with_direct_size
+  |> Device.FileSystem.calculate_total_size_nodes()
+
+nodes_with_total_size
+|> Device.FileSystem.get_dirs_with_at_most_n_size(100_000)
+|> Enum.map(fn {_key, info} -> info.content end)
+|> Enum.sum()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+1297683
+```
+
+## No Space Left On Device (Puzzle 2/2)
+
+Now, you're ready to choose a directory to delete.
+
+Filesystem `total_disk_space = 70_000_000`. To run the update, you need at least an `unused_space = 30_000_000`. Try to find a directory you can delete that will free up enough space to run the update.
+
+So, your current `unused space` is `total_disk_space - used_size`, which is the **total size** of the **outermost directory `/`**.
+
+In the example below, the `used_size` is `= 48381165`, and the **unused space** must currently be `total_disk - used_size = 21618835`, which isn't quite the `30000000` required by the update: you need to delete a directory with a total size of at least `8381165`.
+
+To achieve this, you have the following options:
+
+* Delete directory `d`, which would increase unused space by `24933642`.
+* Delete directory `/`, which would increase unused space by `48381165`.
+
+So... Between these, **choose the smallest**: `d`, increasing unused space by `24933642`.
+
+**Find the smallest directory that its deletion allows you to run the update. What is the total size of that directory?**
+
+```elixir
+nodes_with_total_size
+|> Device.FileSystem.get_minimum_space_dir_deletion_to_allows_the_update(30_000_000)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{["dscbfp", "mmhtpz", "dscbfp", "/"],
+ %{content: 5756764, successors: ["cddzd", "dscbfp", "hmwqgjnl", "whbjm"]}}
+```
+
+| Previous                     | Next                         |
+| ---------------------------- | ---------------------------: |
+| [Day 6](../Day6/Day6.livemd) | [Day 8](../Day8/Day8.livemd) |
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
