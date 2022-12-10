@@ -1,0 +1,362 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# AOC 22 - Day8
+
+```elixir
+Mix.install([
+  # Performs fast operations on matrices using native C code and CBLAS library.
+  {:matrex, "~> 0.6"}
+])
+
+# For more info about installation: https://github.com/versilov/matrex#installation 
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+:ok
+```
+
+## Index
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
+
+**Index**
+
+* [Puzzle 1](#treetop-tree-house-(puzzle-1/2))
+* [Puzzle 2](#treetop-tree-house-(puzzle-2/2))
+
+## Treetop Tree House (Puzzle 1/2)
+
+The expedition comes across a peculiar patch of **tall trees all planted carefully in a grid** `🌲​🐦`​, a previous expedition planted these trees as a reforestation effort. Now, Elves are curious if this would be a **good location for a tree house** `🌲🌳🏡🌳🌲`.
+
+First, **determine whether there is enough tree cover here to keep a tree house hidden**  😶‍🌫️. To do this, you need to **count the number of trees that are visible from outside the grid** when looking directly along a row or column.
+
+The Elves have already launched a quadcopter to generate a map with the height of each tree (your puzzle input). For example:
+
+```
+30373
+25512
+65332
+33549
+35390
+```
+
+**Each tree is represented as a single digit** whose value is **its height**, where **0** is the **shortest** and **9** is the **tallest**.
+
+**A tree is visible if all other trees between it and an edge of the grid are shorter than it**: only **consider trees** in the **same row or column**.
+
+**All of the trees around the edge of the grid are visible**, there are no trees to block the view.
+
+In this example, that only leaves the interior `(3x3) 9 trees` to consider:
+
+* `(X)` The `top-left 5` is **visible** from the **left** and **top**, but it is **not visible** from **bottom** and **right** (because other trees of height 5 are in the way).
+* `(X)` The `top-middle 5` is **visible** from the **top** and **right**.
+* `(|)` The `top-right 1` is **not visible** from any direction.
+* `(X)` The `left-middle 5` is **visible** only from the **right**.
+* `(|)` The `center 3` is **not visible** from any direction.
+* `(X)` The `right-middle 3` is visible from the right.
+* In the **bottom row**, the `(X)` `middle 5` is **visible**, but the `(|)` `3` and `(|)` `4` are **not**.
+
+With `(5x5 - 3x3) 16` **trees visible on the edge** and another `5` **visible in the interior**, a `total of 21` trees are visible in this arrangement.
+
+**Consider your map; how many trees are visible from outside the grid?**
+
+```elixir
+## Read the file
+
+# Livebook & Input file are in same directory
+input_root = "#{__DIR__}/input.txt"
+
+grid =
+  case File.read(input_root) do
+    {:ok, input} ->
+      input
+      |> String.split("\n", trim: true)
+      |> Enum.map(fn row ->
+        row
+        |> String.codepoints()
+        |> Enum.map(&String.to_integer/1)
+      end)
+      |> Matrex.new()
+
+    {:error, msg} ->
+      IO.inspect(msg)
+  end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+#Matrex[99×99]
+┌                                                                                             ┐
+│     0.0     2.0     1.0     1.0     0.0     0.0  …      1.0     2.0     0.0     0.0     1.0 │
+│     2.0     1.0     2.0     1.0     1.0     2.0  …      0.0     2.0     1.0     2.0     0.0 │
+│     0.0     0.0     1.0     1.0     1.0     2.0  …      1.0     0.0     0.0     1.0     1.0 │
+│     1.0     0.0     1.0     0.0     1.0     1.0  …      3.0     2.0     1.0     2.0     2.0 │
+│     1.0     2.0     0.0     2.0     0.0     1.0  …      0.0     3.0     2.0     1.0     2.0 │
+│     1.0     1.0     1.0     2.0     0.0     1.0  …      0.0     3.0     2.0     2.0     0.0 │
+│     2.0     1.0     0.0     2.0     2.0     0.0  …      0.0     1.0     1.0     2.0     0.0 │
+│     0.0     0.0     2.0     2.0     2.0     0.0  …      0.0     2.0     0.0     3.0     3.0 │
+│     1.0     1.0     0.0     0.0     2.0     2.0  …      1.0     1.0     3.0     3.0     2.0 │
+│     1.0     0.0     1.0     1.0     2.0     2.0  …      0.0     3.0     0.0     2.0     0.0 │
+│     3.0     1.0     2.0     1.0     2.0     2.0  …      1.0     0.0     3.0     3.0     1.0 │
+│     ⋮       ⋮       ⋮       ⋮       ⋮       ⋮    …      ⋮       ⋮       ⋮       ⋮       ⋮   │
+│     2.0     2.0     1.0     1.0     2.0     2.0  …      1.0     3.0     1.0     0.0     1.0 │
+│     3.0     0.0     2.0     1.0     1.0     2.0  …      2.0     1.0     1.0     2.0     0.0 │
+│     2.0     0.0     0.0     2.0     2.0     0.0  …      0.0     0.0     2.0     2.0     0.0 │
+│     2.0     3.0     2.0     0.0     1.0     1.0  …      2.0     3.0     1.0     0.0     2.0 │
+│     2.0     1.0     0.0     1.0     1.0     1.0  …      3.0     0.0     0.0     2.0     2.0 │
+│     1.0     0.0     1.0     1.0     0.0     3.0  …      1.0     2.0     1.0     1.0     1.0 │
+│     1.0     1.0     1.0     1.0     0.0     2.0  …      1.0     1.0     2.0     1.0     2.0 │
+│     0.0     0.0     1.0     1.0     2.0     3.0  …      1.0     0.0     1.0     1.0     0.0 │
+│     2.0     1.0     0.0     0.0     2.0     2.0  …      2.0     2.0     0.0     2.0     0.0 │
+│     0.0     0.0     1.0     1.0     1.0     2.0  …      2.0     1.0     2.0     1.0     1.0 │
+└                                                                                             ┘
+```
+
+```elixir
+defmodule TreeHouse do
+  def get_neighbours_at(grid, row, column, side) do
+    {rows, cols} = Matrex.size(grid)
+
+    case side do
+      :left -> Matrex.submatrix(grid, row..row, 1..(column - 1))
+      :rigth -> Matrex.submatrix(grid, row..row, (column + 1)..cols)
+      :top -> Matrex.submatrix(grid, 1..(row - 1), column..column)
+      :bottom -> Matrex.submatrix(grid, (row + 1)..rows, column..column)
+      _ -> raise "Not Implemented"
+    end
+  end
+
+  def is_visible_at_left(grid, row, column),
+    do: grid[row][column] > get_neighbours_at(grid, row, column, :left)[:max]
+
+  def is_visible_at_rigth(grid, row, column),
+    do: grid[row][column] > get_neighbours_at(grid, row, column, :rigth)[:max]
+
+  def is_visible_at_top(grid, row, column),
+    do: grid[row][column] > get_neighbours_at(grid, row, column, :top)[:max]
+
+  def is_visible_at_bottom(grid, row, column),
+    do: grid[row][column] > get_neighbours_at(grid, row, column, :bottom)[:max]
+
+  @doc """
+  Giving a grid (2D-Matrex) and a inner position (row and column), check if 
+  all values at top, at bottom, at rigth or at left are lower, in case of one 
+  of sides have all values lower, return true. Giving a grid (2D-Matrex) and
+  outer positions, always return true.
+
+  ## Examples
+
+  iex> TreeHouse.is_visible?(Matrex.new([[0,2,0], [1,3,1], [0,4,0]]), 2 , 2)
+  true
+
+  iex> TreeHouse.is_visible?(Matrex.new([[0,2,0], [1,0,1], [0,1,0]]), 2 , 2)
+  false
+
+  iex> TreeHouse.is_visible?(Matrex.new([[0,2,0], [1,0,1], [0,1,0]]), 1 , 3)
+  true
+  """
+  def is_visible?(grid, row, column) do
+    {rows, cols} = Matrex.size(grid)
+
+    unless row in [1, rows] or column in [1, cols] do
+      is_visible_at_left(grid, row, column) or
+        is_visible_at_rigth(grid, row, column) or
+        is_visible_at_top(grid, row, column) or
+        is_visible_at_bottom(grid, row, column)
+    else
+      true
+    end
+  end
+
+  @doc """
+  Giving a grid (2D-Matrex) where the values represent the heigth, 
+  count the visible positions from the outside.
+
+  ## Examples
+
+  iex> TreeHouse.is_visible?(Matrex.new([[0,2,0], [1,3,1], [0,4,0]]), 2 , 2)
+  9
+
+  iex> TreeHouse.count_visible_trees(Matrex.new([[0,2,0], [1,0,1], [0,1,0]]))
+  8
+  """
+  def count_visible_trees(grid) do
+    {rows, cols} = Matrex.size(grid)
+    outsize_trees = rows * cols - (rows - 2) * (cols - 2)
+
+    for i <- 2..(rows - 1),
+        j <- 2..(cols - 1) do
+      is_visible?(grid, i, j)
+    end
+    |> Enum.reduce(0, fn x, acc -> (x && acc + 1) || acc end)
+    |> then(&(&1 + outsize_trees))
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, TreeHouse, <<70, 79, 82, 49, 0, 0, 24, ...>>, {:count_visible_trees, 1}}
+```
+
+```elixir
+TreeHouse.count_visible_trees(grid)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+1809
+```
+
+## Treetop Tree House (Puzzle 2/2)
+
+😊 Content with the amount of tree cover available, the Elves just need to know the **best spot to build their tree house**: **they would like to be able to see a lot of trees**. 🌲
+
+To **measure** the **viewing distance** from a **given tree**, **look up**, **down**, **left**, and **right** from that tree; **stop if you reach an edge or at the first tree that is the same height or taller** than the tree under consideration (**If a tree is right on the edge, at least one of its viewing distances will be zero**). The proposed tree house has large eaves to keep it dry.
+
+In the example above, consider the middle 5 in the second row:
+
+```
+3 0  3  7 3
+2 5 (5) 1 2
+6 5  3  3 2
+3 3  5  4 9
+3 5  3  9 0
+```
+
+* Looking **up**: its **view** is **not blocked**; it **can see 1 tree** (of height 3).
+* Looking **left**: its **view** is **blocked** immediately; **it can see only 1 tree** (of height 5, right next to it).
+* Looking **right**, its **view** is **not blocked**; it **can see 2 trees**.
+* Looking **down**, its **view** is **blocked** eventually; **it can see 2 trees** (one of height 3, then the tree of height 5 that blocks its view).
+
+A tree's **scenic score** is found by **multiplying together** its viewing distance in each of the four directions. For this tree, this is `4` (found by multiplying `1 * 1 * 2 * 2`).
+
+Consider the tree of height 5 in the middle of the fourth row:
+
+```
+3 0  3  7 3
+2 5  5  1 2
+6 5  3  3 2
+3 3 (5) 4 9
+3 5  3  9 0
+```
+
+* Looking **up**, its view is **blocked at 2 trees** (by another tree with a height of 5).
+* Looking left, its **view is not blocked**; it **can see 2 trees**.
+* Looking down, its **view is also not blocked**; it **can see 1 tree**.
+* Looking right, its **view is blocked at 2 trees** (by a massive tree of height 9).
+
+This tree's **scenic score** is `8 = (2 * 2 * 1 * 2)`; this is the ideal spot for the tree house.
+
+**Consider each tree on your map. What is the highest scenic score possible for any tree?**
+
+```elixir
+defmodule TreeHouse2 do
+  def get_neighbour_in_order(grid, row, column, side) do
+    result = TreeHouse.get_neighbours_at(grid, row, column, side) |> Matrex.to_list()
+    if side in [:top, :left], do: result |> Enum.reverse(), else: result
+  end
+
+  @doc """
+  Giving an element in a grid, calculate its score by considering the distance 
+  from itself to neighbours with more value than itself: 
+  at left, right, top and bottom.
+  
+  ## Examples
+  iex> Matrex.new([
+  ...>  [3,0,3,7,3],
+  ...>  [2,5,5,1,2],
+  ...>  [6,5,3,3,2],
+  ...>  [3,3,5,4,9],
+  ...>  [3,5,3,9,0]
+  ...> ])
+  ...> |> TreeHouse2.calculate_score(4,3)
+  8
+  
+  """
+  def calculate_score(_list, _value, true, acc), do: acc + 1
+  def calculate_score([], _value, _stop, acc), do: acc
+
+  def calculate_score([h | t], value, false, acc) do
+    stop = h >= value
+    new_acc = (stop && acc) || acc + 1
+    calculate_score(t, value, stop, new_acc)
+  end
+
+  def calculate_score(grid, row, column) do
+    value = grid[row][column]
+
+    top = get_neighbour_in_order(grid, row, column, :top) |> calculate_score(value, false, 0)
+    left = get_neighbour_in_order(grid, row, column, :left) |> calculate_score(value, false, 0)
+
+    bottom =
+      get_neighbour_in_order(grid, row, column, :bottom) |> calculate_score(value, false, 0)
+
+    rigth = get_neighbour_in_order(grid, row, column, :rigth) |> calculate_score(value, false, 0)
+
+    left * rigth * top * bottom
+  end
+
+  @doc """
+  Giving a grid, return the maximun score of each elements.
+  If an element is right on the edge, at least one of its viewing distances will be zero.
+  So, ignore the edge cases and if there aren't other inside elements, return 0.
+  
+  ## Examples
+  iex> Matrex.new([
+  ...>  [3,0,3,7,3],
+  ...>  [2,5,5,1,2],
+  ...>  [6,5,3,3,2],
+  ...>  [3,3,5,4,9],
+  ...>  [3,5,3,9,0]
+  ...> ])
+  ...> |> TreeHouse2.calculate_maximun_score()
+  8
+  
+  iex> Matrex.new([[3, 3], [2, 2]])
+  ...>|> TreeHouse2.calculate_maximun_score()
+  0
+  
+  """
+  def calculate_maximun_score(grid) do
+    {rows, cols} = Matrex.size(grid)
+
+    unless rows < 3 or cols < 3 do
+      for i <- 2..(rows - 1),
+          j <- 2..(cols - 1) do
+        TreeHouse2.calculate_score(grid, i, j)
+      end
+      |> Enum.max()
+    else
+      0
+    end
+  end
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, TreeHouse2, <<70, 79, 82, 49, 0, 0, 18, ...>>, {:calculate_maximun_score, 1}}
+```
+
+```elixir
+TreeHouse2.calculate_maximun_score(grid)
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+479400
+```
+
+| Previous                     | Next                         |
+| ---------------------------- | ---------------------------: |
+| [Day 7](../Day7/Day7.livemd) | [Day 9](../Day9/Day9.livemd) |
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
