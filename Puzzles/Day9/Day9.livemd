@@ -341,15 +341,6 @@ simulation_steps =
 ]
 ```
 
-```elixir
-simulation_steps_example = [{}]
-```
-
-<!-- livebook:{"output":true} -->
-
-```
-[{}]
-```
 
 ```elixir
 defmodule RopeBridge do
