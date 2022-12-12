@@ -52,6 +52,8 @@ Two puzzles will be made available on each day in the Advent calendar; the secon
 
 * [⭐ Day 8 ⭐](./Puzzles/Day8/Day8.livemd)
 
+* [⭐ Day 9 ⭐](./Puzzles/Day9/Day9.livemd)
+
 * [⭐ Day 10 ⭐](./Puzzles/Day10/Day10.livemd)
 
   ...
