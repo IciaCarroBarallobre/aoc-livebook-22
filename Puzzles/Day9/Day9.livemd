@@ -1,0 +1,469 @@
+<!-- livebook:{"persist_outputs":true} -->
+
+# AOC 22 - Day9
+
+## Index
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
+
+**Index**
+
+* [Puzzle 1](#rope-bridge-(puzzle-1/2))
+* [Puzzle 2](#rope-bridge-(puzzle-2/2))
+
+## Rope Bridge (Puzzle 1/2)
+
+🪢🪢 This **rope bridge** creaks as you walk along it. **You aren't sure how old it is, or whether it can even support your weight**. 🧝‍♀️🧝‍♀️ It seems to support the Elves just fine, though. The bridge spans a gorge which was carved out by the massive river far below you.
+
+🦶 You step carefully; as you do, the ropes stretch and twist. You decide to distract yourself by modeling rope physics; maybe **you can even figure out where not to step**.
+
+Consider a rope with a knot at each end; these knots mark the head and the tail of the rope. If the head moves far enough away from the tail, the tail is pulled toward the head. Due to the aforementioned Planck lengths, **the rope must be quite short; in fact, the head (`H`)** and **tail (`T`) must always be touching** (**diagonally**, **adjacent** and **even overlapping**):
+
+```
+.... .... ...
+.TH. .H.. .H.
+.... ..T. ...
+     ....
+```
+
+If the `h` is **ever two steps directly up**, **down**, **left**, **or right** from the `t`, the `t` must also **move one step in that direction so it remains close enough**:
+
+```
+.....    .....    .....
+.TH.. -> .T.H. -> ..TH.
+.....    .....    .....
+
+...    ...    ...
+.T.    .T.    ...
+.H. -> ... -> .T.
+...    .H.    .H.
+...    ...    ...
+```
+
+Otherwise, if the `h` and `t` **aren't touching** and **aren't in the same row** or **column**, the `t` always **moves one step diagonally to keep up**:
+
+```
+.....    .....    .....
+.....    ..H..    ..H..
+..H.. -> ..... -> ..T..
+.T...    .T...    .....
+.....    .....    .....
+
+.....    .....    .....
+.....    .....    .....
+..H.. -> ...H. -> ..TH.
+.T...    .T...    .....
+.....    .....    .....
+```
+
+You just **need to work out where the `t` goes as the head follows a series of motions**. **Assume the head and the `t` both start at the same position**, **overlapping**.
+
+Example:
+
+```
+R 4
+U 4
+L 3
+D 1
+R 4
+D 1
+L 5
+R 2
+```
+
+**This series of motions** moves the **head right four steps**, **then up four steps**, **then left three steps**, **then down one step, and so on**.
+
+After each step, **you'll need to update the position of the tail if the step means the head is no longer adjacent to the tail**. Visually, these motions occur as follows (s marks the starting position as a reference point):
+
+```
+== Initial State ==
+
+......
+......
+......
+......
+H.....  (H covers T, s)
+
+== R 4 ==
+
+......
+......
+......
+......
+TH....  (T covers s)
+
+......
+......
+......
+......
+sTH...
+
+......
+......
+......
+......
+s.TH..
+
+......
+......
+......
+......
+s..TH.
+
+== U 4 ==
+
+......
+......
+......
+....H.
+s..T..
+
+......
+......
+....H.
+....T.
+s.....
+
+......
+....H.
+....T.
+......
+s.....
+
+....H.
+....T.
+......
+......
+s.....
+
+== L 3 ==
+
+...H..
+....T.
+......
+......
+s.....
+
+..HT..
+......
+......
+......
+s.....
+
+.HT...
+......
+......
+......
+s.....
+
+== D 1 ==
+
+..T...
+.H....
+......
+......
+s.....
+
+== R 4 ==
+
+..T...
+..H...
+......
+......
+s.....
+
+..T...
+...H..
+......
+......
+s.....
+
+......
+...TH.
+......
+......
+s.....
+
+......
+....TH
+......
+......
+s.....
+
+== D 1 ==
+
+......
+....T.
+.....H
+......
+s.....
+
+== L 5 ==
+
+......
+....T.
+....H.
+......
+s.....
+
+......
+....T.
+...H..
+......
+s.....
+
+......
+......
+..HT..
+......
+s.....
+
+......
+......
+.HT...
+......
+s.....
+
+......
+......
+HT....
+......
+s.....
+
+== R 2 ==
+
+......
+......
+.H....  (H covers T)
+......
+s.....
+
+......
+......
+.TH...
+......
+s.....
+```
+
+**After simulating the rope**, you can **count up all of the positions the tail visited at least once**. In this diagram, s again marks the starting position (which the tail also visited) and # marks other positions the tail visited:
+
+```
+..##..
+...##.
+.####.
+....#.
+s###..
+```
+
+So, there are **13 positions the tail visited at least once**.
+
+**Simulate your complete hypothetical series of motions. How many positions does the tail of the rope visit at least once?**
+
+```elixir
+## Read the file
+
+# Livebook & Input file are in same directory
+input_root = "#{__DIR__}/input.txt"
+
+simulation_steps =
+  case File.read(input_root) do
+    {:ok, input} ->
+      input
+      |> String.split("\n", trim: true)
+      |> Enum.map(fn row ->
+        [motion, value] =
+          row
+          |> String.split(" ", trim: true)
+
+        {String.to_atom(motion), String.to_integer(value)}
+      end)
+
+    {:error, msg} ->
+      IO.inspect(msg)
+  end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[
+  U: 2,
+  L: 2,
+  U: 1,
+  R: 2,
+  D: 2,
+  L: 1,
+  R: 1,
+  U: 2,
+  D: 1,
+  L: 2,
+  D: 2,
+  R: 2,
+  D: 1,
+  L: 1,
+  U: 2,
+  D: 2,
+  R: 1,
+  U: 1,
+  L: 1,
+  D: 1,
+  L: 1,
+  R: 2,
+  U: 1,
+  D: 2,
+  U: 2,
+  D: 1,
+  L: 1,
+  D: 1,
+  L: 2,
+  R: 2,
+  D: 2,
+  R: 1,
+  D: 2,
+  R: 1,
+  D: 2,
+  R: 1,
+  U: 2,
+  L: 1,
+  U: 2,
+  R: 2,
+  D: 2,
+  U: 1,
+  R: 1,
+  L: 2,
+  D: 1,
+  L: 1,
+  R: 1,
+  D: 2,
+  R: 2,
+  L: 1,
+  ...
+]
+```
+
+```elixir
+simulation_steps_example = [{}]
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+[{}]
+```
+
+```elixir
+defmodule RopeBridge do
+  @doc """
+  Check if two 2D-point are in touch: diagonally, adjacent and even overlapping.
+  
+  ## Examples
+  
+  iex> RopeBridge.is_in_touch?({1,2}, {3,4})
+  false
+  
+  iex> RopeBridge.is_in_touch?({3,0}, {4,1})
+  true
+  """
+  def is_in_touch?({x, y}, {xt, yt}), do: yt in (y - 1)..(y + 1) and xt in (x - 1)..(x + 1)
+
+  def same_column?({x, _y}, {xt, _yt}), do: x == xt
+  def same_row?({_x, y}, {_xt, yt}), do: y == yt
+  def same_position?(head, tail), do: head == tail
+
+  @doc """
+  If a point (head) and another (tail) are in touch: diagonally, 
+  adjacent or even overlapping, the tail doesn't move. Otherwise, 
+  if the point is in the same row/column, the tail will move vertically
+  or horizontally to the head, if not, diagonally to the head.
+  
+  ## Examples
+  
+  iex> RopeBridge.move_tail({3,0}, {3,4})
+  {3,3}
+  
+  iex> RopeBridge.move_tail({3,0}, {4,1}) #diagonally in touch
+  {4,1}
+  """
+  def move_tail(head, tail) do
+    unless is_in_touch?(head, tail) do
+      {x, y} = head
+      {xt, yt} = tail
+
+      cond do
+        same_column?({x, y}, {xt, yt}) -> {xt, (yt > y && yt - 1) || yt + 1}
+        same_row?({x, y}, {xt, yt}) -> {(xt > x && xt - 1) || xt + 1, yt}
+        true -> {(xt > x && xt - 1) || xt + 1, (yt > y && yt - 1) || yt + 1}
+      end
+    else
+      tail
+    end
+  end
+
+  def move_head(step, {x, y}) do
+    case step do
+      :R -> {x + 1, y}
+      :L -> {x - 1, y}
+      :U -> {x, y + 1}
+      :D -> {x, y - 1}
+    end
+  end
+
+  def execute_step([], _head, _tail, acc), do: acc
+
+  def execute_step([{_step, 0} | steps], head, tail, acc),
+    do: execute_step(steps, head, tail, acc)
+
+  def execute_step([{step, value} | steps], head, tail, acc) do
+    head = move_head(step, head)
+    tail = move_tail(head, tail)
+    execute_step([{step, value - 1} | steps], head, tail, [tail | acc])
+  end
+
+  def execute_steps(input), do: execute_step(input, {0, 0}, {0, 0}, [])
+end
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+{:module, RopeBridge, <<70, 79, 82, 49, 0, 0, 21, ...>>, {:execute_steps, 1}}
+```
+
+```elixir
+simulation_steps
+|> RopeBridge.execute_steps()
+|> Enum.uniq()
+|> Enum.count()
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+6470
+```
+
+## Rope Bridge (Puzzle 2/2)
+
+💥💥 **A rope snaps**! The ropes are moving too quickly to grab. **Fortunately, your simulation can be extended to support longer ropes**.
+
+**Rather than 2 knots**, you now must **simulate a rope consisting of 10 knots**. **One knot is still the head of the rope and moves according to the series of motions**. **Each knot** further down the rope **follows the knot in front of it** using the same rules as before.
+
+Now, you need to keep track of the positions the new tail, 9, visits.
+
+**Simulate your complete series of motions on a larger rope with 10 knots. How many positions does the tail of the rope visit at least once?**
+
+```elixir
+#TO-DO
+```
+
+<!-- livebook:{"output":true} -->
+
+```
+nil
+```
+
+| Previous                     | Next                            |
+| ---------------------------- | ------------------------------: |
+| [Day 8](../Day8/Day8.livemd) | [Day 10](../Day10/Day10.livemd) |
+
+[Return to puzzles index](../../AdventOfCodeIndex.livemd)
